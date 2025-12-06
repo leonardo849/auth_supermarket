@@ -4,7 +4,6 @@ import { Logger } from "./utils/logger.js";
 import { basename } from "path";
 
 export class Server extends BaseServer { 
-    private app: Express =  express()
     constructor(port: number) {
         super(port)
     }

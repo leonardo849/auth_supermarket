@@ -1,8 +1,9 @@
 import {connect} from "mongoose"
 import { Logger } from "../utils/logger.js"
 import { basename } from "path"
+import { IDatabase } from "../interfaces/database.interface.js"
 
-export class Database {
+export class Database implements IDatabase {
     private file = basename(import.meta.url)
     async connectToDB() {
         try {
