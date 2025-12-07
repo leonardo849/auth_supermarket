@@ -23,6 +23,15 @@ jobs:
           --health-interval 10s 
           --health-timeout 5s 
           --health-retries 5
+      redis:
+        image: redis:7.2
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v3
@@ -59,4 +68,5 @@ jobs:
             PORT: 3000
             APP_ENV: DEV
             MONGO_URI: mongodb://admin:admin@localhost:27017/APP-DB
+            REDIS_URI: redis://:password@localhost:6379/3
         

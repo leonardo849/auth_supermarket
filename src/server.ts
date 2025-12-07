@@ -16,7 +16,7 @@ export class Server extends BaseServer {
     start(port: number) {
         
         const server = this.app.listen(port, () => {
-            Logger.info({file: basename(import.meta.url)}, "trying to run server") 
+            Logger.info({file: basename(import.meta.url)}, "running server") 
         })
         server.on("error", (err: Error) => {
             Logger.error(err, {file: basename(import.meta.url), err})

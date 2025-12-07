@@ -4,6 +4,7 @@ import { basename } from "path";
 import dotenv from "dotenv"
 import { Database } from "./database/db.ts";
 import { Express } from "express";
+import { RedisClient } from "./cache/cache.ts";
 
 export class Index {
     private file: string = basename(import.meta.url)
@@ -28,13 +29,29 @@ export class Index {
 
     async connectToMongo() {
         const db = new Database()
-        await db.connectToDB()
-        Logger.info({ file: this.file }, "connecting to mongo")
+        try {
+            await db.connectToDB()
+            Logger.info({ file: this.file }, "connected to mongo")
+        } catch (err) {
+            Logger.error(err, {file: this.file})
+            process.exit(1)
+        }
+    }
+    async connectToRedis() {
+        const redis = new RedisClient()
+        try {
+            await redis.connect()
+            Logger.info({ file: this.file }, "connected to redis")
+        } catch (err) {
+            Logger.error(err, {file: this.file})
+            process.exit(1)
+        }
     }
 
     async runProject() {
         this.initEnvironment()
         await this.connectToMongo()
+        await this.connectToRedis()
         this.setupServer()
 
         const port = isNaN(Number(process.env.PORT)) ? 3000 : Number(process.env.PORT)

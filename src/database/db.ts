@@ -15,7 +15,6 @@ export class Database implements IDatabase {
             Logger.info({file: this.file}, "connected to mongo")
         } catch(error) {
             Logger.error(error, {file: this.file})
-            process.exit(1)
         }
     }
 }
