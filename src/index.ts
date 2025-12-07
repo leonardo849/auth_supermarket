@@ -9,7 +9,8 @@ import { RedisClient } from "./cache/cache.ts";
 export class Index {
     private file: string = basename(import.meta.url)
     private server!: Server
-    
+    private redis!: RedisClient
+    private mongo!: Database
     constructor() {
         
     }
@@ -28,9 +29,9 @@ export class Index {
     }
 
     async connectToMongo() {
-        const db = new Database()
+        this.mongo = new Database()
         try {
-            await db.connectToDB()
+            await this.mongo.connectToDB()
             Logger.info({ file: this.file }, "connected to mongo")
         } catch (err) {
             Logger.error(err, {file: this.file})
@@ -38,9 +39,9 @@ export class Index {
         }
     }
     async connectToRedis() {
-        const redis = new RedisClient()
+        this.redis = new RedisClient()
         try {
-            await redis.connect()
+            await this.redis.connect()
             Logger.info({ file: this.file }, "connected to redis")
         } catch (err) {
             Logger.error(err, {file: this.file})
@@ -51,6 +52,19 @@ export class Index {
     async connectToDatabases() {
         await this.connectToMongo()
         await this.connectToRedis()
+    }
+    async disconnectToRedis() {
+        await this.redis.disconnect()
+    }
+    async disconnectToMongo() {
+        await this.mongo.disconnectToDB()
+    }
+    async disconnectToDatabases() {
+        await this.disconnectToMongo()
+        await this.disconnectToRedis()
+    }
+    async closeDatabases() {
+        
     }
     async runProject() {
         this.initEnvironment()

@@ -24,6 +24,12 @@ export class RedisClient {
             Logger.error(error, {file: this.file})
         }
     }
+    async disconnect() {
+        if (this.client.isOpen) {
+            await this.client.quit()
+            Logger.info({file: this.file}, "disconnected to redis")
+        }
+    }
 
     getClient(): typeof this.client {
         return this.client

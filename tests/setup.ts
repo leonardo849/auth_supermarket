@@ -8,4 +8,7 @@ index.setupServer()
 
 export const app = index.getApp()
 
+afterAll(async () => {
+    await index.disconnectToDatabases()
+})
 

@@ -1,4 +1,4 @@
-import {connect} from "mongoose"
+import mongoose, {connect} from "mongoose"
 import { Logger } from "../utils/logger.ts"
 import { basename } from "path"
 import { IDatabase } from "../interfaces/database.interface.ts"
@@ -16,5 +16,12 @@ export class Database implements IDatabase {
         } catch(error) {
             Logger.error(error, {file: this.file})
         }
+    }
+    async disconnectToDB() {
+        if (mongoose.connection.readyState !== 0 ) {
+            await mongoose.connection.close()
+            Logger.info({file: this.file}, "disconnected to mongo")
+        }
+        
     }
 }
