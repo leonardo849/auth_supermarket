@@ -48,10 +48,13 @@ export class Index {
         }
     }
 
-    async runProject() {
-        this.initEnvironment()
+    async connectToDatabases() {
         await this.connectToMongo()
         await this.connectToRedis()
+    }
+    async runProject() {
+        this.initEnvironment()
+        await this.connectToDatabases()
         this.setupServer()
 
         const port = isNaN(Number(process.env.PORT)) ? 3000 : Number(process.env.PORT)
