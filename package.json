@@ -18,7 +18,7 @@
     "start": "node --loader ts-node/esm src/main.ts",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix",
-    "test": "node --experimental-vm-modules ./node_modules/.bin/jest --detectOpenHandles"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js ----detectOpenHandles"
   },
   "dependencies": {
     "@typegoose/typegoose": "^12.20.0",

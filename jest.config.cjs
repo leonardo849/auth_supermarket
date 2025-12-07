@@ -17,4 +17,5 @@ module.exports = {
   ),
   testMatch: ['**/?(*.)+(spec|test).[tj]s'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  testPathIgnorePatterns: ["src/main.ts"]
 }

@@ -4,6 +4,10 @@
     "module": "ESNext",
     "target": "ES2020",
     "isolatedModules": true,
+    "exclude": [
+    "node_modules",
+    "src/main.ts"
+  ]
   },
   "include": ["jest.config.ts", "tests/**/*"]
 }
