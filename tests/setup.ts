@@ -1,6 +1,10 @@
 import {Index} from "../src/index"
 
-export const index = new Index()
+const index = new Index()
+index.initEnvironment()
+index.setupServer()
+
+
 export const app = index.getApp()
 
 

@@ -1,3 +1,6 @@
 import { Index } from "./index.ts";
 
-new Index().runProject()
+const index = new Index()
+index.initEnvironment()
+
+index.runProject()
