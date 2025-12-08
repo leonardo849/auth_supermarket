@@ -1,14 +1,14 @@
 {
-  "name": "template_ts_mongo",
+  "name": "auth service supermarket",
   "version": "1.0.0",
-  "description": "my template for backend projects using mongo",
-  "homepage": "https://github.com/leonardo849/template_ts_backend_project_mongo#readme",
+  "description": "auth service supermarket",
+  "homepage": "https://github.com/leonardo849/auth_supermarket#readme",
   "bugs": {
-    "url": "https://github.com/leonardo849/template_ts_backend_project_mongo/issues"
+    "url": "https://github.com/leonardo849/auth_supermarket/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/leonardo849/template_ts_backend_project_mongo"
+    "url": "git+https://github.com/leonardo849/auth_supermarket"
   },
   "license": "ISC",
   "author": "me :)",
