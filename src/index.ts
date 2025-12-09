@@ -1,4 +1,4 @@
-import { Server } from "./server.ts";
+import { Server } from "./server/server.ts";
 import { Logger } from "./utils/logger.ts";
 import { basename } from "path";
 import dotenv from "dotenv"

@@ -1,6 +1,6 @@
-import { BaseServer } from "./classes/server.abstract.ts";
+import { BaseServer } from "../classes/server.abstract.ts";
 import  { Request, Response} from "express"
-import { Logger } from "./utils/logger.ts";
+import { Logger } from "../utils/logger.ts";
 import { basename } from "path";
 
 export class Server extends BaseServer { 
