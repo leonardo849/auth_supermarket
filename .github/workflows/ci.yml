@@ -60,13 +60,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
+      
+
+      - name: install libs
+        run: npm install
+
       - name: users.json
         env:
           USERS_JSON: ${{ secrets.USERS_JSON }}
         run: echo "$USERS_JSON" > src/database/seeds/users.json
 
-      - name: install libs
-        run: npm install
       - name: Run tests
         run: npm test
         env:
