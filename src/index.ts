@@ -28,7 +28,7 @@ export class Index {
         return this.server
     }
 
-    async connectToMongo() {
+    private async connectToMongo() {
         this.mongo = new Database()
         try {
             await this.mongo.connectToDB()
@@ -38,7 +38,7 @@ export class Index {
             process.exit(1)
         }
     }
-    async connectToRedis() {
+    private async connectToRedis() {
         this.redis = new RedisClient()
         try {
             await this.redis.connect()
@@ -53,18 +53,19 @@ export class Index {
         await this.connectToMongo()
         await this.connectToRedis()
     }
-    async disconnectToRedis() {
+
+    private async disconnectToRedis() {
         await this.redis.disconnect()
     }
-    async disconnectToMongo() {
+    private async disconnectToMongo() {
         await this.mongo.disconnectToDB()
     }
     async disconnectToDatabases() {
         await this.disconnectToMongo()
         await this.disconnectToRedis()
     }
-    async closeDatabases() {
-        
+    async migrateSeeds() {
+        await this.mongo.migrateUsersToDB()
     }
     async runProject() {
         this.initEnvironment()

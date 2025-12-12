@@ -2,3 +2,7 @@ package-lock.json
 node_modules
 dist
 .env
+settings.json
+.vscode
+/src/database/seeds/users.json
+

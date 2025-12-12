@@ -1,7 +1,9 @@
 import { BaseServer } from "../classes/server.abstract.ts";
-import  { Request, Response} from "express"
+import  express, { IRoute, Request, Response} from "express"
 import { Logger } from "../utils/logger.ts";
 import { basename } from "path";
+import { UserRoutes } from "./routes/user.routes.ts";
+import { errorHandler } from "./middlewares/error_handler.ts";
 
 export class Server extends BaseServer { 
     constructor() {
@@ -12,6 +14,11 @@ export class Server extends BaseServer {
         this.app.get("/", function(req: Request, reply: Response) {
             reply.status(200).json({message: "hello"})
         })
+        this.app.use(express.json())
+        const userRoutes = new UserRoutes()
+        this.app.use("/users", userRoutes.setupRoutes())
+        Logger.info({file: basename(import.meta.url)}, "setting up app")
+        this.app.use(errorHandler)
     }
     start(port: number) {
         

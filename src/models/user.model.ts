@@ -1,10 +1,16 @@
-import { Roles } from "../enums/roles.ts";
-import { getModelForClass, prop, pre } from "@typegoose/typegoose";
-import bcrypt from "bcrypt";
+import {  compare } from "../utils/hash.ts";
+import { Roles } from "../types/enums/roles.ts";
+import { getModelForClass, prop, pre, modelOptions } from "@typegoose/typegoose";
+import bcrypt from "bcrypt"
 
+@modelOptions({
+    schemaOptions: {
+        timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}
+    }
+})
 @pre<User>("save", async function() {
     if (!this.isModified("password")) return
-    this.password = await bcrypt.hash(this.password, 10);
+    this.password = await bcrypt.hash(this.password, 10)
 })
 export class User {
 
@@ -17,7 +23,7 @@ export class User {
     @prop({ required: true })
     password!: string;
 
-    @prop({ enum: [Roles.CUSTOMER, Roles.MANAGER, Roles.WORKER], default: Roles.CUSTOMER })
+    @prop({ enum: [Roles.CUSTOMER, Roles.MANAGER, Roles.WORKER, Roles.DEVELOPER], default: Roles.CUSTOMER })
     role!: Roles
 
     @prop()
@@ -26,7 +32,7 @@ export class User {
     @prop({ default: true })
     active!: boolean
 
-    @prop()
+    @prop({type: () => Object, required: true})
     address!: {
         street: string
         number: number
@@ -35,8 +41,14 @@ export class User {
         state: string
     }
 
+    _id!: string;
+
+
+    createdAt!: Date;
+    updatedAt!: Date;
+
     async comparePassword(password: string) {
-        return await bcrypt.compare(password, this.password)
+        return await compare(password, this.password)
     }
 }
 

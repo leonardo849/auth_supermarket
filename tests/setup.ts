@@ -1,14 +1,35 @@
-import {Index} from "../src/index"
+import { Index } from "../src/index"
+import mongoose from "mongoose"
+import {Express} from "express"
 
-const index = new Index()
-index.initEnvironment()
-index.connectToDatabases()
-index.setupServer()
+export const genericalPassword = ";0p$e(v^EY38"
 
+let index: Index
+export let app: Express
 
-export const app = index.getApp()
+async function deleteAllInMongodb() {
+    const collections = mongoose.connection.collections;
+    for (const key in collections) {
+        await collections[key].deleteMany({})
+    }
+}
 
-afterAll(async () => {
-    await index.disconnectToDatabases()
+beforeAll(async () => {
+    
+    index = new Index()
+    index.initEnvironment()
+    await index.connectToDatabases()
+    await deleteAllInMongodb()
+    await index.migrateSeeds()
+    index.setupServer()
+
+    
+    app = index.getApp()
+
+    
 })
 
+afterAll(async () => {
+    await deleteAllInMongodb()
+    await index.disconnectToDatabases()
+})
