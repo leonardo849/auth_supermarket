@@ -68,7 +68,9 @@ jobs:
       - name: users.json
         env:
           USERS_JSON: ${{ secrets.USERS_JSON }}
-        run: echo "$USERS_JSON" > src/database/seeds/users.json
+        run: | 
+          mkdir -p src/database/seeds
+          echo "$USERS_JSON" > src/database/seeds/users.json
 
       - name: Run tests
         run: npm test
