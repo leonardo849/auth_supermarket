@@ -52,6 +52,10 @@ export class RabbitMQService {
         this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, body)
     }
     private static publishMessages(exchange: string, routingKey: string, body: any) {
+        if (process.env.RABBIT_ON && process.env.RABBIT_ON !== "true") {
+            Logger.info({file: this.file}, `[fake] sending message to exchange ${exchange} routing key ${routingKey}`)
+            return
+        }
         const published = this.channel.publish(exchange, routingKey, Buffer.from(JSON.stringify(body)), {persistent: true})
         if (!published) {
             Logger.error(new Error(`message with exchange ${exchange} and routing key ${routingKey} wasn't published`), {file: this.file})
