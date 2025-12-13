@@ -20,8 +20,9 @@ describe("test functions", () => {
         expect(code).toBeLessThanOrEqual(9)
     })
     it("should generate random code", async() => {
-        const code = generateRandomCode()
-        expect(code.length).toBeCloseTo(6)
+        const quantityOfNumbers = 6
+        const code = generateRandomCode(quantityOfNumbers)
+        expect(code.length).toBe(quantityOfNumbers)
     })
     it("should validate a jwt", async() => {
         const iUser: IUser = {
