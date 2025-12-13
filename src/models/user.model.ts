@@ -50,6 +50,8 @@ export class User {
 
     _id!: string;
 
+    @prop({default: false})
+    emailWithNotificationToVerificationHasBeenSent!: boolean
 
     createdAt!: Date;
     updatedAt!: Date;

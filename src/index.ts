@@ -6,6 +6,7 @@ import { Database } from "./database/db.ts";
 import { Express } from "express";
 import { RedisClient } from "./cache/cache.ts";
 import { RabbitMQService } from "./rabbitmq/rabbitmq.ts";
+import { UserWorker } from "./workers/user.worker.ts";
 
 export class Index {
     private file: string = basename(import.meta.url)
@@ -37,6 +38,10 @@ export class Index {
             Logger.error(err, {file: this.file})
             process.exit(1)
         }
+    }
+    private async startWorkers() {
+        const userWorker = new UserWorker()
+        await userWorker.scheduleJobs()
     }
     private async connectToRedis() {
         try {
@@ -85,6 +90,7 @@ export class Index {
         await this.connectToDatabases()
         await this.migrateSeeds()
         await this.startRabbit()
+        await this.startWorkers()
         this.setupServer()
 
         const port = isNaN(Number(process.env.PORT)) ? 3000 : Number(process.env.PORT)

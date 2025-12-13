@@ -62,4 +62,18 @@ export class UserService {
             throw errorHandler(err)
         }
     }
+    async findUneverifiedUsersEmail(): Promise<string[]> {
+        try {
+            const emails = await this.userRepository.findUnverifiedUsersEmailThatAreOneDayOld()
+            return emails
+        } catch (err: any) {
+            throw errorHandler(err)
+        }
+    }
+    async updateEmailWithNotificationToVerificationHasBeenSent(emails: string[]): Promise<void> {
+        await this.userRepository.updateEmailWithNotificationToVerificationHasBeenSent(emails)
+    }
+    async deleteUnverifiedUsers() {
+        await this.userRepository.deleteUneverifiedUsers()
+    }
 }

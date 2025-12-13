@@ -62,6 +62,35 @@ export class UserRepository  {
         }
         return user  
     }
+    async findUnverifiedUsersEmailThatAreOneDayOld(): Promise<string[]> {
+        const twentyTwoHoursAgo = new Date(Date.now() - 22 * 60 * 60 * 1000)
+        const users = await this.userModel.find({
+            verified: false,
+            emailWithNotificationToVerificationHasBeenSent: false,
+            createdAt: {
+                $lte: twentyTwoHoursAgo
+            }
+        })
+        const emailsArray = users.map(element => element.email)
+        return emailsArray
+    }
+    async deleteUneverifiedUsers(): Promise<void> {
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+        await this.userModel.deleteMany({verified: false,emailWithNotificationToVerificationHasBeenSent: true , createdAt: {
+                $lte: oneDayAgo
+            }
+        })
+    }
+    async updateEmailWithNotificationToVerificationHasBeenSent(emails: string[]) {
+        await this.userModel.updateMany({
+            email: {$in: emails}
+        },
+        {
+            $set: {
+                emailWithNotificationToVerificationHasBeenSent: true
+            }
+        })
+    }
     async findUserById(id: string): Promise<User> {
         const user = await this.userModel.findOne({_id: id})
         if (!user) {
