@@ -80,4 +80,5 @@ jobs:
             SECRET: ${{ secrets.SECRET }}
             MONGO_URI: mongodb://APP-USERNAME:APP-PASSWORD@localhost:27017/APP-DB?authSource=APP-DB
             REDIS_URI: redis://localhost:6379/3
+            RABBIT_ON: false
         

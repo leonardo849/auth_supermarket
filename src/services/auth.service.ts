@@ -1,4 +1,4 @@
-import { UserRepository } from "../repositories/user.repository.ts";
+import { UserRepository } from "../repositories/mongo/user.repository.ts";
 import { LoginUserDTO } from "../dto/user.dto.ts";
 import jwt from "jsonwebtoken"
 import { IUser } from "../types/interfaces/user.interface.ts";
@@ -14,6 +14,9 @@ export class AuthService {
     async loginUser(data: LoginUserDTO): Promise<string| void> {
         try {
             const user = await this.userRepository.findUserByEmail(data.email)
+            if (!user) {
+                throw createError.NotFound(`user with email ${data.email} wasn't found`)
+            }
             const compare: boolean = await user.comparePassword(data.password)
             const payload: IUser = {
                 id: user._id.toString(),

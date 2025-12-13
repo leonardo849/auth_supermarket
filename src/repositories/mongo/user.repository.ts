@@ -1,13 +1,14 @@
-import { User, UserModel } from "../models/user.model.ts"
+import { User, UserModel } from "../../models/user.model.ts"
 import { basename } from "path"
-import { DatabaseError } from "../classes/database_error.ts"
-import { Logger } from "../utils/logger.ts"
-import { CreateUserDTO } from "../dto/user.dto.ts"
-import { NotFoundDatabase } from "../classes/notfound_database.ts"
+import { DatabaseError } from "../../classes/database_error.ts"
+import { Logger } from "../../utils/logger.ts"
+import { CreateUserDTO } from "../../dto/user.dto.ts"
+import { NotFoundDatabase } from "../../classes/notfound_database.ts"
+import bcrypt from "bcrypt"
 
 
 type userWithoutPassword = Omit<User, "password">
-type userWithJustPassword = Pick<User, "password">
+
 export class UserRepository  {
     private readonly file: string = basename(import.meta.url)
     private readonly userModel: typeof UserModel = UserModel
@@ -22,7 +23,15 @@ export class UserRepository  {
             throw new DatabaseError(err)
         }
     }
-    async createUser(data: CreateUserDTO) {
+    async FindAllActiveUsers(): Promise<userWithoutPassword[]> {
+        try {
+            return await this.userModel.find({active: true}, { password: 0 }).lean()
+        } catch (err: any) {
+            Logger.error(err, {file: this.file})
+            throw new DatabaseError(err)
+        }
+    }
+    async createUser(data: CreateUserDTO, code: string) {
         try {
             const user = new UserModel()
             const addressData = data.address
@@ -37,19 +46,29 @@ export class UserRepository  {
             user.name = data.name
             user.email = data.email
             user.dateOfBirth = new Date(data.dateOfBirth)
+            user.code = await bcrypt.hash(code, 10)
             await user.save()
         } catch (err: any) {
             Logger.error(err, {file: this.file})
             throw new DatabaseError(JSON.stringify(err))
         }
     }
-    async findUserByEmail(email: string): Promise<User> {
+    async findUserByEmail(email: string): Promise<User|null> {
         const user = await this.userModel.findOne({email: email})
         if (!user) {
-            const error = new NotFoundDatabase("user wasn't found")
+            const error = new NotFoundDatabase(`user with email ${email} wasn't found`)
+            Logger.error(error, {file: this.file})
+            return null
+        }
+        return user  
+    }
+    async findUserById(id: string): Promise<User> {
+        const user = await this.userModel.findOne({_id: id})
+        if (!user) {
+            const error = new NotFoundDatabase(`user with id ${id} wasn't found`)
             Logger.error(error, {file: this.file})
             throw error
         }
-        return user  
+        return user
     }
 }

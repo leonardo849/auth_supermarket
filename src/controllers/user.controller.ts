@@ -23,4 +23,12 @@ export class UserController {
             next(err)
         }
     }
+    async findAllActiveUsers(req: Request, res: Response, next: NextFunction) {
+        try {
+            const users = await this.userService.findActiveUsers()
+            return res.status(200).json(users)
+        } catch (err) {
+            next(err)
+        }
+    }
 }

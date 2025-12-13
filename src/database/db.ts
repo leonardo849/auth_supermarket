@@ -30,6 +30,7 @@ export class Database  {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             //@ts-expect-error
             user.role = u.role
+            user.verified = true
             const userInDb = await UserModel.findOne({email: u.email})
             if (userInDb) {
                 Logger.error(new Error(`there is already a user with that email ${user.email}`), {file: this.file})

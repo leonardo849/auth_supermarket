@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 
 
-export async function compare(password: string, passwordInDB: string): Promise<boolean> {
-    return await bcrypt.compare(password, passwordInDB)
+export async function compare(string: string, hash: string): Promise<boolean> {
+    return await bcrypt.compare(string, hash)
 }

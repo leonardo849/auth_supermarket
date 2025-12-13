@@ -3,8 +3,12 @@ import { validateToken } from "../../utils/jwt.ts";
 import { NextFunction, Response } from "express";
 import { Logger } from "../../utils/logger.ts";
 import { basename } from "path";
+import { UserService } from "../../services/user.service.ts";
+import httpError from "http-errors"
+
 
 const file = basename(import.meta.url)
+const userService = new UserService()
 
 export async function validateJwt(req: RequestWithUser, res: Response, next: NextFunction) {
     const auth = req.headers.authorization
@@ -19,10 +23,14 @@ export async function validateJwt(req: RequestWithUser, res: Response, next: Nex
 
     try {
         const payload = validateToken(token)
+        await userService.findUserById(payload.id)
         req.user = payload
         next()
     } catch (err) {
+        if (err instanceof httpError.HttpError) {
+            return res.status(err.status).json({error: err.message})
+        }
         Logger.error(err, {file})
-        return res.status(403).json({error: "error validating token"})
+        return res.status(403).json({error: "error validating token "})
     }
 }

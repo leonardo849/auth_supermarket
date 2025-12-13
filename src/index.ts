@@ -5,11 +5,11 @@ import dotenv from "dotenv"
 import { Database } from "./database/db.ts";
 import { Express } from "express";
 import { RedisClient } from "./cache/cache.ts";
+import { RabbitMQService } from "./rabbitmq/rabbitmq.ts";
 
 export class Index {
     private file: string = basename(import.meta.url)
     private server!: Server
-    private redis!: RedisClient
     private mongo!: Database
     constructor() {
         
@@ -39,9 +39,8 @@ export class Index {
         }
     }
     private async connectToRedis() {
-        this.redis = new RedisClient()
         try {
-            await this.redis.connect()
+            await RedisClient.connect()
             Logger.info({ file: this.file }, "connected to redis")
         } catch (err) {
             Logger.error(err, {file: this.file})
@@ -53,9 +52,20 @@ export class Index {
         await this.connectToMongo()
         await this.connectToRedis()
     }
+    async connectToRabbit() {
+        await RabbitMQService.startRabbit(process.env.RABBIT_URI as string)
+    }
 
     private async disconnectToRedis() {
-        await this.redis.disconnect()
+        await RedisClient.disconnect()
+    }
+    private async startRabbit() {
+        try {
+            await RabbitMQService.startRabbit(process.env.RABBIT_URI as string)
+        } catch (err: unknown) {
+            Logger.error(err, {file: this.file})
+            process.exit(1)
+        }
     }
     private async disconnectToMongo() {
         await this.mongo.disconnectToDB()
@@ -64,21 +74,26 @@ export class Index {
         await this.disconnectToMongo()
         await this.disconnectToRedis()
     }
+    async disconnectFromRabbit() {
+        await RabbitMQService.disconnectRabbit()
+    }
     async migrateSeeds() {
         await this.mongo.migrateUsersToDB()
     }
     async runProject() {
         this.initEnvironment()
         await this.connectToDatabases()
+        await this.migrateSeeds()
+        await this.startRabbit()
         this.setupServer()
 
         const port = isNaN(Number(process.env.PORT)) ? 3000 : Number(process.env.PORT)
         this.server.start(port)
         Logger.info({ file: this.file }, "server is running")
     }
-
     getApp(): Express {
         return this.server.getApp()
     }
+    
 }
 

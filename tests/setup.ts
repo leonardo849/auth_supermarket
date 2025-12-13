@@ -19,6 +19,7 @@ beforeAll(async () => {
     index = new Index()
     index.initEnvironment()
     await index.connectToDatabases()
+    await index.connectToRabbit()
     await deleteAllInMongodb()
     await index.migrateSeeds()
     index.setupServer()
@@ -32,4 +33,5 @@ beforeAll(async () => {
 afterAll(async () => {
     await deleteAllInMongodb()
     await index.disconnectToDatabases()
+    await index.disconnectFromRabbit()
 })

@@ -19,6 +19,7 @@ export class UserRoutes {
     setupRoutes(): Router {
         const router = Router()
         router.get("/", validateJwt, checkRole([Roles.MANAGER, Roles.DEVELOPER]),this.userController.findAllUsers.bind(this.userController))
+        router.get("/active", validateJwt, checkRole([Roles.MANAGER, Roles.DEVELOPER]), this.userController.findAllActiveUsers.bind(this.userController))
         router.post("/", validateMiddleware(CreateUserDTO) ,this.userController.createUser.bind(this.userController))
         router.post("/login", validateMiddleware(LoginUserDTO), this.authController.loginUser.bind(this.authController))
         Logger.info({file: this.file}, "user's routes are running")

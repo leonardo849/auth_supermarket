@@ -3,6 +3,7 @@ import { Roles } from "../types/enums/roles.ts";
 import { getModelForClass, prop, pre, modelOptions } from "@typegoose/typegoose";
 import bcrypt from "bcrypt"
 
+
 @modelOptions({
     schemaOptions: {
         timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}
@@ -32,6 +33,12 @@ export class User {
     @prop({ default: true })
     active!: boolean
 
+    @prop({default: false})
+    verified!: boolean
+
+    @prop()
+    code!: string
+
     @prop({type: () => Object, required: true})
     address!: {
         street: string
@@ -49,6 +56,9 @@ export class User {
 
     async comparePassword(password: string) {
         return await compare(password, this.password)
+    }
+    async compareCode(code: string) {
+        return await compare(code, this.code)
     }
 }
 

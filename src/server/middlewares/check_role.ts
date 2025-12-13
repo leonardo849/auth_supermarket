@@ -4,7 +4,6 @@ import { NextFunction, Response } from "express";
 
 export function checkRole(role: Roles[]) {
     return async function(req: RequestWithUser, res: Response, next: NextFunction) {
-        console.log(req.user?.role, role)
         if (req.user && role.includes(req.user.role)) {
             return next()
         }
