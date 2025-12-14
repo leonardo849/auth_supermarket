@@ -15,7 +15,7 @@ export class UserService {
             const users = await this.userRepository.findAllUsers()
             const mapped: FindUserDTO[] = []
             for (const u of users) {
-                mapped.push(new FindUserDTO(u._id, u.email, u.role, u.dateOfBirth, u.active, new FindAddressDTO(u.address.street, u.address.number, u.address.neighborhood, u.address.city, u.address.state), u.createdAt, u.updatedAt))
+                mapped.push(new FindUserDTO(u._id, u.name,u.email, u.role, u.dateOfBirth, u.active, new FindAddressDTO(u.address.street, u.address.number, u.address.neighborhood, u.address.city, u.address.state), u.verified,u.createdAt, u.updatedAt))
             }
             return mapped
         } catch (err: any) {
@@ -43,7 +43,7 @@ export class UserService {
                 return userRedis
             }
             const user = await this.userRepository.findUserById(id)
-            const userMapped = new FindUserDTO(user._id.toString(), user.email, user.role, user.dateOfBirth, user.active, new FindAddressDTO(user.address.street, user.address.number, user.address.neighborhood, user.address.city, user.address.state), user.createdAt, user.updatedAt)
+            const userMapped = new FindUserDTO(user._id.toString(), user.name,user.email, user.role, user.dateOfBirth, user.active, new FindAddressDTO(user.address.street, user.address.number, user.address.neighborhood, user.address.city, user.address.state),user.verified ,user.createdAt, user.updatedAt)
             this.userCacheRepository.createUser(userMapped) // don't wait for it
             return userMapped
         } catch (err: any) {
@@ -55,7 +55,7 @@ export class UserService {
             const users = await this.userRepository.FindAllActiveUsers()
             const mapped: FindUserDTO[] = []
             for (const u of users) {
-                mapped.push(new FindUserDTO(u._id, u.email, u.role, u.dateOfBirth, u.active, new FindAddressDTO(u.address.street, u.address.number, u.address.neighborhood, u.address.city, u.address.state), u.createdAt, u.updatedAt))
+                mapped.push(new FindUserDTO(u._id, u.name,u.email, u.role, u.dateOfBirth, u.active, new FindAddressDTO(u.address.street, u.address.number, u.address.neighborhood, u.address.city, u.address.state), u.verified,u.createdAt, u.updatedAt))
             }
             return mapped
         } catch (err: any) {

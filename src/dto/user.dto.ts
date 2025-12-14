@@ -1,4 +1,4 @@
-import { IsDate, IsDateString, IsEmail, IsInt, IsOptional, IsString, IsStrongPassword, Length, MaxDate, min, MinDate, ValidateNested } from "class-validator";
+import { IsDate, IsDateString, IsEmail, IsInt, IsNumberString, IsOptional, IsString, IsStrongPassword, Length, MaxDate, min, MinDate, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
 import { Roles } from "../types/enums/roles.ts";
 
@@ -117,6 +117,12 @@ export class LoginUserDTO {
     password!: string
 }
 
+export class VerifyCodeDTO {
+    @IsNumberString()
+    @Length(6,6)
+    code!: string
+}
+
 export class FindAddressDTO {
     constructor(readonly street: string, readonly number: number, readonly neighborhood: string, readonly city: string, readonly state: string) {
 
@@ -124,7 +130,7 @@ export class FindAddressDTO {
 }
 
 export class FindUserDTO {
-    constructor(readonly id: string, readonly email: string,  readonly role: Roles, readonly dateOfBirth: Date, readonly active: boolean, readonly address: FindAddressDTO, readonly createdAt: Date, readonly updatedAt: Date) {
+    constructor(readonly id: string,readonly name: string ,readonly email: string,  readonly role: Roles, readonly dateOfBirth: Date, readonly active: boolean, readonly address: FindAddressDTO,readonly verified: boolean ,readonly createdAt: Date, readonly updatedAt: Date) {
         
     }
 }

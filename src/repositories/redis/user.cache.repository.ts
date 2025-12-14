@@ -24,4 +24,11 @@ export class UserCacheRepository {
         const user = data ? JSON.parse(data) : null
         return user
     }
+    async deleteUsers(ids: string[]) {
+        const keys: string[] = []
+        for (const i of ids) {
+            keys.push(`user:${i}`)
+        }
+        await this.redisClient.del(keys)
+    }
 }

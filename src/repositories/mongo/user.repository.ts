@@ -31,6 +31,10 @@ export class UserRepository  {
             throw new DatabaseError(err)
         }
     }
+    async verifyUser(id: string) {
+        await this.userModel.findOneAndUpdate({_id: id}, {verified: true, code: null, emailWithNotificationToVerificationHasBeenSent: null})
+    }
+
     async createUser(data: CreateUserDTO, code: string) {
         try {
             const user = new UserModel()
@@ -81,13 +85,17 @@ export class UserRepository  {
             }
         })
     }
+    async updateCode(id: string, code: string): Promise<void> {
+        await this.userModel.findOneAndUpdate({_id: id}, {code: code})
+    }
     async updateEmailWithNotificationToVerificationHasBeenSent(emails: string[]) {
         await this.userModel.updateMany({
             email: {$in: emails}
         },
         {
             $set: {
-                emailWithNotificationToVerificationHasBeenSent: true
+                emailWithNotificationToVerificationHasBeenSent: true,
+
             }
         })
     }
