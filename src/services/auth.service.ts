@@ -29,10 +29,10 @@ export class AuthService {
                 throw createError.NotFound(`user with email ${data.email} wasn't found`)
             }
             const compare: boolean = await user.comparePassword(data.password)
-            const payload: IUser = {
+            const payload: Omit<IUser, "credential_version"> = {
                 id: user._id.toString(),
                 role: user.role,
-                updatedAt: user.updatedAt
+                authUpdatedAt: user.authUpdatedAt
             }
             const token = jwt.sign(payload, process.env.SECRET as string, {expiresIn: "72h"})
             if (compare) {

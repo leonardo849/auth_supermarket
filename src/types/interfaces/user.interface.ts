@@ -2,6 +2,7 @@ import { Roles } from "../enums/roles.ts"
 
 export interface IUser {
     id: string
-    updatedAt: Date
+    authUpdatedAt: Date
     role: Roles
+    credential_version: Date
 }

@@ -2,8 +2,7 @@ import {compare} from "../../src/utils/hash.ts"
 import {generateRandomCode} from "../../src/utils/generate_random_code.ts"
 import bcrypt from "bcrypt"
 import { getRandomInt } from "../../src/utils/random_int.ts"
-import {validateToken} from "../../src/utils/jwt.ts"
-import jwt from "jsonwebtoken"
+import {validateToken, generateJwt} from "../../src/utils/jwt.ts"
 import {IUser} from "../../src/types/interfaces/user.interface.ts"
 import { Roles } from "../../src/types/enums/roles.ts"
 
@@ -24,13 +23,20 @@ describe("test functions", () => {
         const code = generateRandomCode(quantityOfNumbers)
         expect(code.length).toBe(quantityOfNumbers)
     })
+    const iUser: Omit<IUser, "credential_version"> = {
+        id: "kdoafkfoadkofdkokfosdofk",
+        role: Roles.CUSTOMER,
+        authUpdatedAt: new Date()
+    }
+    it("generate a jwt", async() => {
+        const jwt = generateJwt(iUser)
+        expect(jwt).toBeDefined()
+        expect(typeof jwt).toBe("string")
+        expect(jwt.length).toBeGreaterThan(0)
+    })
     it("should validate a jwt", async() => {
-        const iUser: IUser = {
-            id: "kdoafkfoadkofdkokfosdofk",
-            role: Roles.CUSTOMER,
-            updatedAt: new Date()
-        }
-        const token = jwt.sign(iUser, process.env.SECRET as string)
+        
+        const token = generateJwt(iUser)
         const payload = validateToken(token) as IUser
         if (payload.id !== iUser.id || payload.role !== iUser.role ) {
             throw new Error("error validate token")

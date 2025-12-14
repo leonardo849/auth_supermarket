@@ -9,3 +9,18 @@ export function validateToken(token: string) {
         throw new Error("error validating token")
     }
 }
+
+export function generateJwt(user: Omit<IUser, "credential_version">) {
+    try {
+        const payload: IUser = {
+            credential_version: new Date(),
+            id: user.id,
+            role: user.role,
+            authUpdatedAt: user.authUpdatedAt
+        }
+        const token = jwt.sign(payload, process.env.SECRET as string)
+        return token
+    } catch (err: unknown) {
+        throw new Error("error generating token")
+    }
+}

@@ -30,6 +30,11 @@ class Services {
         }
     }
 })
+@pre<User>("save", function () {
+    if (this.isNew) {
+        this.authUpdatedAt = this.createdAt ?? new Date()
+    }
+})
 export class User {
 
     @prop({ required: true })
@@ -55,6 +60,9 @@ export class User {
 
     @prop()
     code!: string
+
+    @prop({default: Date.now})
+    authUpdatedAt!: Date
 
     @prop({type: () => Services, default: {}})
     services!: Services
