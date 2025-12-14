@@ -61,7 +61,7 @@ export class RabbitMQService {
     private static async createQueue() {
         await this.channel.assertQueue(this.queueName, {durable: true})
         Logger.info({file: this.file}, `creating queue ${this.queueName}`)
-        // await this.channel.bindQueue(this.queueName, this.exchanges.exchangeProduct, "user.product.*")
+        await this.channel.bindQueue(this.queueName, this.exchanges.exchangeProduct, "user.product.*")
         await this.channel.bindQueue(this.queueName, this.exchanges.exchangeSale, "user.sale.*")
     
     }
@@ -82,10 +82,10 @@ export class RabbitMQService {
     }
     private static  async handlerRoutingKeys(json: any, routingKey: string) {
         const userConsumer = new UserConsumer()
-        // if (routingKey === "user.product.created") {
-        //     await userConsumer.updateProductServiceValue(json)
-        //     Logger.info({file: this.file}, `user with id ${json.id} was updated. Its productService value is true`)
-        // }
+        if (routingKey === "user.product.created") {
+            await userConsumer.updateProductServiceValue(json)
+            Logger.info({file: this.file}, `user with id ${json.id} was updated. Its productService value is true`)
+        }
     }
    
     static async  disconnectRabbit() {

@@ -6,5 +6,7 @@ export class UserConsumer {
     constructor() {
 
     }
-    
+    async updateProductServiceValue(body: CreatedUserEvent) {
+        await this.userService.updateProductServiceValue(body.id)
+    }
 }
