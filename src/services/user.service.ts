@@ -76,4 +76,12 @@ export class UserService {
     async deleteUnverifiedUsers() {
         await this.userRepository.deleteUneverifiedUsers()
     }
+    async updateProductServiceValue(id: string) {
+        try {
+            await this.userRepository.findUserById(id)
+            await this.userRepository.updateProductServiceValue(id)
+        } catch (err: any) {
+            throw errorHandler(err)
+        }
+    }
 }

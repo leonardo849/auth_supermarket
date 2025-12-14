@@ -2,6 +2,7 @@ import { basename } from "path";
 import { Logger } from "../utils/logger.ts";
 import amqp, { Connection, Channel, Options } from "amqplib";
 import { VerifiedUser } from "../dto/events.dto.ts";
+import { UserConsumer } from "./user_consumer.ts";
 
 export class RabbitMQService {
     private static connection: amqp.ChannelModel
@@ -9,11 +10,14 @@ export class RabbitMQService {
     private static file: string = basename(import.meta.url)
     private static exchanges = {
         exchangeEmail: "email_direct",
-        exchangeAuth: "auth_topic"
+        exchangeAuth: "auth_topic",
+        exchangePayment: "payment_topic",
+        exchangeProduct: "product_topic",
+        exchangeSale: "sale_topic"
     }
+    private static queueName: string = "queue_auth"
     private static routingKeys = {
-        email: "email",
-        userVerified: "user.auth.verified"
+        email: "email"
     }
 
     static async startRabbit(uri: string) {
@@ -24,6 +28,8 @@ export class RabbitMQService {
         try {
             await this.connectToRabbit(uri)
             await this.createExchanges()
+            await this.createQueue()
+            this.consumer()
         } catch (err: unknown) {
             Logger.error(err, {file: this.file})
             throw err
@@ -42,7 +48,46 @@ export class RabbitMQService {
         const exchangeAuth = this.exchanges.exchangeAuth
         await this.channel.assertExchange(exchangeAuth, "topic", {durable: true})
         Logger.info({file: this.file}, `creating exchange ${exchangeAuth}`)
+        // const exchangePayment = this.exchanges.exchangePayment
+        // await this.channel.assertExchange(exchangePayment, "topic", {durable: true})
+        // Logger.info({file: this.file}, `creating exchange ${exchangePayment}`)
+        const exchangeProduct = this.exchanges.exchangeProduct
+        await this.channel.assertExchange(exchangeProduct, "topic", {durable: true})
+        Logger.info({file: this.file}, `creating exchange ${exchangeProduct}`)
+        const exchangeSale = this.exchanges.exchangeSale
+        await this.channel.assertExchange(exchangeSale, "topic", {durable: true})
+        Logger.info({file: this.file}, `creating exchange ${exchangeSale}`)
     }
+    private static async createQueue() {
+        await this.channel.assertQueue(this.queueName, {durable: true})
+        Logger.info({file: this.file}, `creating queue ${this.queueName}`)
+        // await this.channel.bindQueue(this.queueName, this.exchanges.exchangeProduct, "user.product.*")
+        await this.channel.bindQueue(this.queueName, this.exchanges.exchangeSale, "user.sale.*")
+    
+    }
+    private static  consumer() {
+        this.channel.consume(this.queueName, async(msg: any) => {
+            if (!msg || !msg.content) return
+            try {
+                const json = JSON.parse(msg.content.toString())
+                Logger.info({file: this.file}, `routing key: ${msg.fields.routingKey}`)
+                Logger.info({file: this.file}, `json: ${msg.content.toString()}`)
+                await this.handlerRoutingKeys(json, msg.fields.routingKey)
+                this.channel.ack(msg)
+            } catch (err) {
+                this.channel.nack(msg, false, false)
+                Logger.error(err, {file: this.file})
+            }
+        })
+    }
+    private static  async handlerRoutingKeys(json: any, routingKey: string) {
+        const userConsumer = new UserConsumer()
+        // if (routingKey === "user.product.created") {
+        //     await userConsumer.updateProductServiceValue(json)
+        //     Logger.info({file: this.file}, `user with id ${json.id} was updated. Its productService value is true`)
+        // }
+    }
+   
     static async  disconnectRabbit() {
         if (this.channel) {
             await this.channel.close()
@@ -57,9 +102,9 @@ export class RabbitMQService {
     static  publishCreatedUserEmail(body: {to: string[], subject: string, text: string}) {
         this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, body)
     }
-    static publishVerifiedUser(body: VerifiedUser) {
-        this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userVerified, body)
-    }
+    // static publishVerifiedUser(body: VerifiedUser) {
+    //     this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userVerified, body)
+    // }
     private static publishMessages(exchange: string, routingKey: string, body: any): boolean {
         if (process.env.RABBIT_ON && process.env.RABBIT_ON !== "true") {
             Logger.info({file: this.file}, `[fake] sending message to exchange ${exchange} routing key ${routingKey}`)

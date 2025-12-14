@@ -23,6 +23,13 @@ export class UserRepository  {
             throw new DatabaseError(err)
         }
     }
+    async updateProductServiceValue(id: string): Promise<void> {
+        await this.userModel.findByIdAndUpdate(id, {
+            $set: {
+                "services.productService": true
+            }
+        })
+    }
     async FindAllActiveUsers(): Promise<userWithoutPassword[]> {
         try {
             return await this.userModel.find({active: true}, { password: 0 }).lean()

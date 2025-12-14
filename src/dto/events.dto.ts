@@ -3,3 +3,9 @@ export class VerifiedUser {
         
     }
 }
+
+export class CreatedUserEvent {
+    constructor(readonly id: string) {
+
+    }
+}

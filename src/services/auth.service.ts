@@ -51,25 +51,25 @@ export class AuthService {
                 const compare = await user.compareCode(data.code)
                 if (compare) {
                     await this.userRepository.verifyUser(id)
-                    const user = await this.userRepository.findUserById(id)
-                    const userDto = new FindUserDTO(
-                        user._id,
-                        user.name,
-                        user.email,
-                        user.role,
-                        user.dateOfBirth,
-                        user.active, 
-                        new FindAddressDTO(user.address.street, user.address.number, user.address.neighborhood, user.address.city, user.address.state),
-                        user.verified,
-                        user.createdAt,
-                        user.updatedAt
-                    )
-                    queueMicrotask(() => {
-                        this.userCacheRepository
-                            .createUser(userDto)
-                            .catch(err => Logger.error(err, {file: basename(import.meta.url)}))
-                    })
-                    RabbitMQService.publishVerifiedUser(new VerifiedUser(userDto.id, userDto.name, userDto.email, userDto.updatedAt))
+                    // const user = await this.userRepository.findUserById(id)
+                    // const userDto = new FindUserDTO(
+                    //     user._id,
+                    //     user.name,
+                    //     user.email,
+                    //     user.role,
+                    //     user.dateOfBirth,
+                    //     user.active, 
+                    //     new FindAddressDTO(user.address.street, user.address.number, user.address.neighborhood, user.address.city, user.address.state),
+                    //     user.verified,
+                    //     user.createdAt,
+                    //     user.updatedAt
+                    // )
+                    // queueMicrotask(() => {
+                    //     this.userCacheRepository
+                    //         .createUser(userDto)
+                    //         .catch(err => Logger.error(err, {file: basename(import.meta.url)}))
+                    // })
+                    // RabbitMQService.publishVerifiedUser(new VerifiedUser(userDto.id, userDto.name, userDto.email, userDto.updatedAt))
                     return
                 } else {
                     throw httpError.BadRequest("your code is wrong")

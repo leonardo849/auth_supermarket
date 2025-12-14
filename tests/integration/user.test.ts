@@ -71,6 +71,7 @@ describe("test user's routes", () => {
         send(loginManager)
         expect(response.status).toBe(200)
         expect(response.body).toHaveProperty("token")
+        
         tokenManager = response.body.token
     })
     it("find all", async () => {
