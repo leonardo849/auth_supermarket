@@ -12,12 +12,13 @@ export class RabbitMQService {
         exchangeEmail: "email_direct",
         exchangeAuth: "auth_topic",
         exchangePayment: "payment_topic",
-        exchangeProduct: "product_topic",
+        exchangeProductAuth: "product_auth_direct",
         exchangeSale: "sale_topic"
     }
     private static queueName: string = "queue_auth"
     private static routingKeys = {
-        email: "email"
+        email: "email",
+        userCreatedProduct: "user.product.created"
     }
 
     static async startRabbit(uri: string) {
@@ -51,9 +52,9 @@ export class RabbitMQService {
         // const exchangePayment = this.exchanges.exchangePayment
         // await this.channel.assertExchange(exchangePayment, "topic", {durable: true})
         // Logger.info({file: this.file}, `creating exchange ${exchangePayment}`)
-        const exchangeProduct = this.exchanges.exchangeProduct
-        await this.channel.assertExchange(exchangeProduct, "topic", {durable: true})
-        Logger.info({file: this.file}, `creating exchange ${exchangeProduct}`)
+        const exchangeProductAuth = this.exchanges.exchangeProductAuth
+        await this.channel.assertExchange(exchangeProductAuth, "direct", {durable: true})
+        Logger.info({file: this.file}, `creating exchange ${exchangeProductAuth}`)
         const exchangeSale = this.exchanges.exchangeSale
         await this.channel.assertExchange(exchangeSale, "topic", {durable: true})
         Logger.info({file: this.file}, `creating exchange ${exchangeSale}`)
@@ -61,7 +62,7 @@ export class RabbitMQService {
     private static async createQueue() {
         await this.channel.assertQueue(this.queueName, {durable: true})
         Logger.info({file: this.file}, `creating queue ${this.queueName}`)
-        await this.channel.bindQueue(this.queueName, this.exchanges.exchangeProduct, "user.product.*")
+        await this.channel.bindQueue(this.queueName, this.exchanges.exchangeProductAuth, this.routingKeys.userCreatedProduct)
         await this.channel.bindQueue(this.queueName, this.exchanges.exchangeSale, "user.sale.*")
     
     }
