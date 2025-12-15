@@ -10,15 +10,13 @@ export function validateToken(token: string) {
     }
 }
 
-export function generateJwt(user: Omit<IUser, "credential_version">) {
+export function generateJwt(user: IUser) {
     try {
         const payload: IUser = {
-            credential_version: new Date(),
             id: user.id,
-            role: user.role,
-            authUpdatedAt: user.authUpdatedAt
+            role: user.role
         }
-        const token = jwt.sign(payload, process.env.SECRET as string)
+        const token = jwt.sign(payload, process.env.SECRET as string, {algorithm: "HS256"})
         return token
     } catch (err: unknown) {
         throw new Error("error generating token")

@@ -23,10 +23,9 @@ describe("test functions", () => {
         const code = generateRandomCode(quantityOfNumbers)
         expect(code.length).toBe(quantityOfNumbers)
     })
-    const iUser: Omit<IUser, "credential_version"> = {
+    const iUser: IUser = {
         id: "kdoafkfoadkofdkokfosdofk",
-        role: Roles.CUSTOMER,
-        authUpdatedAt: new Date()
+        role: Roles.CUSTOMER
     }
     it("generate a jwt", async() => {
         const jwt = generateJwt(iUser)
