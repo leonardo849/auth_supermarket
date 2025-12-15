@@ -5,6 +5,7 @@ import { UserCacheRepository } from "../repositories/redis/user.cache.repository
 import { RabbitMQService } from "../rabbitmq/rabbitmq.ts";
 import httpError from "http-errors"
 import { generateRandomCode } from "../utils/generate_random_code.ts";
+import { Roles } from "../types/enums/roles.ts";
 
 export class UserService {
     private readonly userRepository: UserRepository = new UserRepository()
@@ -50,6 +51,15 @@ export class UserService {
             throw errorHandler(err)
         }
     }
+    //afterward i will improve the code
+    async findUserAuthUpdatedAtById(id: string) {
+        try {
+            const date = await this.userRepository.findUserAuthUpdatedAt(id)
+            return date
+        } catch (err: any) {
+            throw errorHandler(err)
+        } 
+    }
     async findActiveUsers(): Promise<FindUserDTO[]> {
         try {
             const users = await this.userRepository.FindAllActiveUsers()
@@ -73,6 +83,7 @@ export class UserService {
     async updateEmailWithNotificationToVerificationHasBeenSent(emails: string[]): Promise<void> {
         await this.userRepository.updateEmailWithNotificationToVerificationHasBeenSent(emails)
     }
+    
     async deleteUnverifiedUsers() {
         await this.userRepository.deleteUneverifiedUsers()
     }

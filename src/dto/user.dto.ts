@@ -1,4 +1,4 @@
-import { IsDate, IsDateString, IsEmail, IsInt, IsNumberString, IsOptional, IsString, IsStrongPassword, Length, MaxDate, min, MinDate, ValidateNested } from "class-validator";
+import { IsDate, IsDateString, IsEmail, IsEnum, IsInt, IsNumberString, IsOptional, IsString, IsStrongPassword, Length, MaxDate, min, MinDate, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
 import { Roles } from "../types/enums/roles.ts";
 
@@ -121,6 +121,11 @@ export class VerifyCodeDTO {
     @IsNumberString()
     @Length(6,6)
     code!: string
+}
+
+export class ChangeUseRoleDTO {
+    @IsEnum(Roles)
+    role!: Roles
 }
 
 export class FindAddressDTO {

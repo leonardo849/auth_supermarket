@@ -5,6 +5,7 @@ import { Logger } from "../../utils/logger.ts"
 import { CreateUserDTO } from "../../dto/user.dto.ts"
 import { NotFoundDatabase } from "../../classes/notfound_database.ts"
 import bcrypt from "bcrypt"
+import { Roles } from "../../types/enums/roles.ts"
 
 
 type userWithoutPassword = Omit<User, "password">
@@ -23,11 +24,21 @@ export class UserRepository  {
             throw new DatabaseError(err)
         }
     }
+    async findUserAuthUpdatedAt(id: string): Promise<Date> {
+        const user = await this.findUserById(id)
+        return user.authUpdatedAt
+    }
     async updateProductServiceValue(id: string): Promise<void> {
         await this.userModel.findByIdAndUpdate(id, {
             $set: {
                 "services.productService": true
             }
+        })
+    }
+    async changeUserRole(role: Roles, id: string) {
+        await this.userModel.findByIdAndUpdate(id, {
+            authUpdatedAt: Date.now(),
+            role: role
         })
     }
     async FindAllActiveUsers(): Promise<userWithoutPassword[]> {

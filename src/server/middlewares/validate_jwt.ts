@@ -1,5 +1,5 @@
 import { RequestWithUser } from "@src/types/interfaces/request.interface.ts";
-import { validateToken } from "../../utils/jwt.ts";
+import { validateToken, verifyJwtIat } from "../../utils/jwt.ts";
 import { NextFunction, Response } from "express";
 import { Logger } from "../../utils/logger.ts";
 import { basename } from "path";
@@ -23,7 +23,8 @@ export async function validateJwt(req: RequestWithUser, res: Response, next: Nex
 
     try {
         const payload = validateToken(token)
-        await userService.findUserById(payload.id)
+        const user = await userService.findUserAuthUpdatedAtById(payload.id)
+        verifyJwtIat(token, user)
         req.user = payload
         next()
     } catch (err) {

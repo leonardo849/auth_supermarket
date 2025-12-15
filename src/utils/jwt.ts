@@ -22,3 +22,19 @@ export function generateJwt(user: IUser) {
         throw new Error("error generating token")
     }
 }
+
+export function verifyJwtIat(token: string, authUpdatedAt: Date): boolean {
+    const payload = jwt.verify(
+        token,
+        process.env.SECRET as string
+    ) as jwt.JwtPayload
+
+    if (!payload.iat) {
+        throw new Error("token withou iat")
+    }
+
+    const tokenIssuedAtMs = payload.iat * 1000 
+    const authUpdatedAtMs = authUpdatedAt.getTime()
+
+    return tokenIssuedAtMs >= authUpdatedAtMs
+}

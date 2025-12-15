@@ -1,7 +1,7 @@
 import { RequestWithUser } from "../types/interfaces/request.interface.ts";
 import { AuthService } from "../services/auth.service.ts";
 import { NextFunction, Response } from "express";
-import { LoginUserDTO, VerifyCodeDTO } from "../dto/user.dto.ts";
+import { ChangeUseRoleDTO, LoginUserDTO, VerifyCodeDTO } from "../dto/user.dto.ts";
 
 export class AuthController {
     private readonly authService: AuthService = new AuthService()
@@ -31,6 +31,16 @@ export class AuthController {
         try {
             await this.authService.getNewUserCode(id)
             return res.status(200).json({message: "new code was sent to your email"})
+        } catch (err) {
+            next(err)
+        }
+    }
+    async changeUserRole(req: RequestWithUser, res: Response, next: NextFunction) {
+        const id = req.params.id as string
+        const body = req.body as ChangeUseRoleDTO
+        try {
+            await this.authService.changeUserRoleById(id, body.role)
+            return res.status(200).json({message: "user's role was updated"})
         } catch (err) {
             next(err)
         }

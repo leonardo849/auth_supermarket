@@ -9,10 +9,7 @@ import httpError from "http-errors"
 import { generateRandomCode } from "../utils/generate_random_code.ts";
 import bcrypt from "bcrypt"
 import { UserCacheRepository } from "../repositories/redis/user.cache.repository.ts";
-import { Logger } from "../utils/logger.ts";
-import { basename } from "path";
-import { RabbitMQService } from "../rabbitmq/rabbitmq.ts";
-import { VerifiedUser } from "../dto/events.dto.ts";
+import { Roles } from "../types/enums/roles.ts";
 
 
 export class AuthService {
@@ -77,6 +74,16 @@ export class AuthService {
         } catch (err: any) {
             throw errorHandler(err)
         }
+    }
+    async changeUserRoleById(id: string, role: Roles) {
+        const user = await this.userRepository.findUserById(id)
+        if (!user) {
+            throw httpError.NotFound("user not found")
+        }
+        if (!user.verified) {
+            throw httpError.BadRequest("that user isn't verified")
+        }
+        await this.userRepository.changeUserRole(role, id)
     }
     async getNewUserCode(id: string): Promise<void> {
         try {
