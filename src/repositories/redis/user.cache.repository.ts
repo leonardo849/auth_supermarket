@@ -8,9 +8,9 @@ export class UserCacheRepository {
     private redisClient: RedisClientType = RedisClient.getClient()
     private file: string = basename(import.meta.url)
 
-    async createUser(user: FindUserDTO): Promise<string|null> {
+    async setUser(user: FindUserDTO, authUpdatedAt?: Date): Promise<string|null> {
         try {
-            await this.redisClient.setEx(`user:${user.id}`, 60*15, JSON.stringify(user))
+            await this.redisClient.setEx(`user:${user.id}`, 60*15, JSON.stringify({...user, authUpdatedAt: authUpdatedAt}))
             const message = "user was setted in redis"
             Logger.info({file: this.file}, message)
             return message
@@ -19,7 +19,7 @@ export class UserCacheRepository {
             return null
         } 
     }
-    async findUserById(id: string): Promise<FindUserDTO|null> {
+    async findUserById(id: string): Promise<FindUserDTO|FindUserDTO & {authUpdatedAt: Date}|null> {
         const data = await this.redisClient.get(`user:${id}`)
         const user = data ? JSON.parse(data) : null
         return user

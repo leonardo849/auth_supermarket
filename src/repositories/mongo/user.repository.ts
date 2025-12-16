@@ -3,9 +3,10 @@ import { basename } from "path"
 import { DatabaseError } from "../../classes/database_error.ts"
 import { Logger } from "../../utils/logger.ts"
 import { CreateUserDTO } from "../../dto/user.dto.ts"
-import { NotFoundDatabase } from "../../classes/notfound_database.ts"
-import bcrypt from "bcrypt"
-import { Roles } from "../../types/enums/roles.ts"
+import {decoratorValidateFilter} from "../../utils/decorator_validate_filter_mongo.ts"
+import { FilterQuery, UpdateQuery } from "mongoose"
+import {ALLOWED_MONGO_OPERATORS} from "../../policies/mongo_policies.ts"
+import {ALLOWED_USER_FILTER_FIELDS} from "../../policies/users/user_policies.ts"
 
 
 type userWithoutPassword = Omit<User, "password">
@@ -16,59 +17,46 @@ export class UserRepository  {
     constructor() {
         
     }
-    async findAllUsers(): Promise<userWithoutPassword[]> {
-        try {
-            return await this.userModel.find({}, { password: 0 }).lean()
-        } catch (err: any) {
-            Logger.error(err, {file: this.file})
-            throw new DatabaseError(err)
+    
+    async findAllPaginated(page:number = 1, limit: number = 20, active?: boolean): Promise<userWithoutPassword[]> {
+        const filter: {active?: boolean} = {}
+        if (active != undefined) {
+            filter["active"] = active
         }
+        const skip = (page - 1 ) * limit
+        return await this.userModel.find(filter, {password: 0}).skip(skip).limit(limit).lean()
     }
-    async findUserAuthUpdatedAt(id: string): Promise<Date> {
-        const user = await this.findUserById(id)
-        return user.authUpdatedAt
-    }
-    async updateProductServiceValue(id: string): Promise<void> {
-        await this.userModel.findByIdAndUpdate(id, {
-            $set: {
-                "services.productService": true
-            }
-        })
-    }
-    async changeUserRole(role: Roles, id: string) {
-        await this.userModel.findByIdAndUpdate(id, {
-            authUpdatedAt: Date.now(),
-            role: role
-        })
-    }
-    async FindAllActiveUsers(): Promise<userWithoutPassword[]> {
-        try {
-            return await this.userModel.find({active: true}, { password: 0 }).lean()
-        } catch (err: any) {
-            Logger.error(err, {file: this.file})
-            throw new DatabaseError(err)
-        }
-    }
-    async verifyUser(id: string) {
-        await this.userModel.findOneAndUpdate({_id: id}, {verified: true, code: null, emailWithNotificationToVerificationHasBeenSent: null})
+    @decoratorValidateFilter({allowedFields: ALLOWED_USER_FILTER_FIELDS, allowedOperators: ALLOWED_MONGO_OPERATORS})
+    async findAllUsers(filter: FilterQuery<User>): Promise<userWithoutPassword[]> {
+        return await this.userModel.find(filter, {password: 0}).lean()
     }
 
-    async createUser(data: CreateUserDTO, code: string) {
+    async updateOneById(id: string, data: UpdateQuery<User>): Promise<boolean> {
+        const result = await this.userModel.updateOne({_id: id}, data)
+        return result.matchedCount > 0
+    }
+    async createUser(data:CreateUserDTO & {hashCode:string}) {
         try {
-            const user = new UserModel()
-            const addressData = data.address
-            user.address = {
-                city: addressData.city,
-                neighborhood: addressData.neighborhood,
-                number: addressData.number,
-                state: addressData.state,
-                street: addressData.street
-            }
-            user.password = data.password
-            user.name = data.name
-            user.email = data.email
-            user.dateOfBirth = new Date(data.dateOfBirth)
-            user.code = await bcrypt.hash(code, 10)
+            const user = new UserModel(
+                {
+                    ...data,
+                    dateOfBirth: new Date(data.dateOfBirth),
+                    hashCode: data.hashCode
+                }
+            )
+            // const addressData = data.address
+            // user.address = {
+            //     city: addressData.city,
+            //     neighborhood: addressData.neighborhood,
+            //     number: addressData.number,
+            //     state: addressData.state,
+            //     street: addressData.street
+            // }
+            // user.password = data.password
+            // user.name = data.name
+            // user.email = data.email
+            // user.dateOfBirth = new Date(data.dateOfBirth)
+            // user.code = data.hashCode
             await user.save()
         } catch (err: any) {
             Logger.error(err, {file: this.file})
@@ -76,54 +64,29 @@ export class UserRepository  {
         }
     }
     async findUserByEmail(email: string): Promise<User|null> {
-        const user = await this.userModel.findOne({email: email})
-        if (!user) {
-            const error = new NotFoundDatabase(`user with email ${email} wasn't found`)
-            Logger.error(error, {file: this.file})
-            return null
-        }
-        return user  
+        return await this.userModel.findOne({email: email})
     }
-    async findUnverifiedUsersEmailThatAreOneDayOld(): Promise<string[]> {
-        const twentyTwoHoursAgo = new Date(Date.now() - 22 * 60 * 60 * 1000)
+    async findUnverifiedUsersEmailIn(timeAgo: Date): Promise<string[]> {
         const users = await this.userModel.find({
             verified: false,
             emailWithNotificationToVerificationHasBeenSent: false,
             createdAt: {
-                $lte: twentyTwoHoursAgo
+                $lte: timeAgo
             }
         })
         const emailsArray = users.map(element => element.email)
         return emailsArray
     }
-    async deleteUneverifiedUsers(): Promise<void> {
-        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-        await this.userModel.deleteMany({verified: false,emailWithNotificationToVerificationHasBeenSent: true , createdAt: {
-                $lte: oneDayAgo
-            }
-        })
+    @decoratorValidateFilter({allowedFields: ALLOWED_USER_FILTER_FIELDS, allowedOperators: ALLOWED_MONGO_OPERATORS})
+    async deleteMany(filter: FilterQuery<User>): Promise<number> {
+        return (await this.userModel.deleteMany(filter)).deletedCount
     }
-    async updateCode(id: string, code: string): Promise<void> {
-        await this.userModel.findOneAndUpdate({_id: id}, {code: code})
+    @decoratorValidateFilter({allowedFields: ALLOWED_USER_FILTER_FIELDS, allowedOperators: ALLOWED_MONGO_OPERATORS})
+    async updateMany(filter: FilterQuery<User>, data: UpdateQuery<User>): Promise<number> {
+        const result = await this.userModel.updateMany(filter, data)
+        return result.modifiedCount
     }
-    async updateEmailWithNotificationToVerificationHasBeenSent(emails: string[]) {
-        await this.userModel.updateMany({
-            email: {$in: emails}
-        },
-        {
-            $set: {
-                emailWithNotificationToVerificationHasBeenSent: true,
-
-            }
-        })
-    }
-    async findUserById(id: string): Promise<User> {
-        const user = await this.userModel.findOne({_id: id})
-        if (!user) {
-            const error = new NotFoundDatabase(`user with id ${id} wasn't found`)
-            Logger.error(error, {file: this.file})
-            throw error
-        }
-        return user
+    async findUserById(id: string): Promise<User|null> {
+       return await this.userModel.findById(id)
     }
 }

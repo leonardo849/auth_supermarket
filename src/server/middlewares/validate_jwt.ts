@@ -23,14 +23,15 @@ export async function validateJwt(req: RequestWithUser, res: Response, next: Nex
 
     try {
         const payload = validateToken(token)
-        const user = await userService.findUserAuthUpdatedAtById(payload.id)
-        verifyJwtIat(token, user)
+        const user = await userService.findUserById(payload.id, true)
+        if ("authUpdatedAt" in user) {
+            verifyJwtIat(token, user.authUpdatedAt)
+        } else {
+            throw Error("there isn't auth updated at in user")
+        }
         req.user = payload
         next()
     } catch (err) {
-        if (err instanceof httpError.HttpError) {
-            return res.status(err.status).json({error: err.message})
-        }
         Logger.error(err, {file})
         return res.status(403).json({error: "error validating token "})
     }

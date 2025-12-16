@@ -4,6 +4,7 @@ import { Logger } from "../utils/logger.ts";
 import { basename } from "path";
 import { UserRoutes } from "./routes/user.routes.ts";
 import { errorHandler } from "./middlewares/error_handler.ts";
+import { AuthRoutes } from "./routes/auth.routes.ts";
 
 export class Server extends BaseServer { 
     constructor() {
@@ -16,7 +17,9 @@ export class Server extends BaseServer {
         })
         this.app.use(express.json())
         const userRoutes = new UserRoutes()
+        const authRoutes = new AuthRoutes()
         this.app.use("/users", userRoutes.setupRoutes())
+        this.app.use("/auth", authRoutes.setupRoutes())
         Logger.info({file: basename(import.meta.url)}, "setting up app")
         this.app.use(errorHandler)
     }

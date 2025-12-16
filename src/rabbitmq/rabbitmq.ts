@@ -100,8 +100,11 @@ export class RabbitMQService {
 
         Logger.info({file: this.file}, "disconnected from Rabbit")
     }
-    static  publishCreatedUserEmail(body: {to: string[], subject: string, text: string}) {
-        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, body)
+    static  publishCreatedUserEmail(to: string[], code: string) {
+        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: to, subject: "code", text: `verify with that code:\n ${code}`})
+    }
+    static publisWarningEmail(to: string[]) {
+        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: to, subject: "warning", text: `hurry and verify your user. If you don't verify your user, it will be deleted soon`})
     }
     // static publishVerifiedUser(body: VerifiedUser) {
     //     this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userVerified, body)

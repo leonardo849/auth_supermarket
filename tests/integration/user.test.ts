@@ -5,7 +5,8 @@ import usersJson from "../../src/database/seeds/users.json" with {type: "json"}
 import { Roles } from "../../src/types/enums/roles.ts"
 
 describe("test user's routes", () => {
-    const prefix = "/users"
+    const prefixUsers = "/users"
+    const prefixAuth = "/auth"
     let tokenDev: string
     let tokenManager: string
     const dev = usersJson.find(element => element.role === Roles.DEVELOPER)
@@ -24,7 +25,7 @@ describe("test user's routes", () => {
             name: "Bruce Wayner",
             password: genericalPassword
         }
-        const response = await request(app).post(prefix). 
+        const response = await request(app).post(prefixUsers). 
         send(body)
 
         expect(response.status).toBe(200)
@@ -46,7 +47,7 @@ describe("test user's routes", () => {
             name: "Bruce Wayner",
             password: "123456"
         }
-        const response = await request(app).post(prefix). 
+        const response = await request(app).post(prefixUsers). 
         send(body)
 
         expect(response.status).toBe(400)
@@ -56,7 +57,7 @@ describe("test user's routes", () => {
             email: dev?.email,
             password: dev?.password
         }
-        const response = await request(app).post(`${prefix}/login`). 
+        const response = await request(app).post(`${prefixAuth}/login`). 
         send(loginDev)
         expect(response.status).toBe(200)
         expect(response.body).toHaveProperty("token")
@@ -67,7 +68,7 @@ describe("test user's routes", () => {
             email: manager?.email,
             password: manager?.password
         }
-        const response = await request(app).post(`${prefix}/login`). 
+        const response = await request(app).post(`${prefixAuth}/login`). 
         send(loginManager)
         expect(response.status).toBe(200)
         expect(response.body).toHaveProperty("token")
@@ -75,7 +76,7 @@ describe("test user's routes", () => {
         tokenManager = response.body.token
     })
     it("find all", async () => {
-        const response = await request(app).get(`${prefix}`). 
+        const response = await request(app).get(`${prefixUsers}`). 
         set("Authorization", `Bearer ${tokenManager}`)
         expect(response.status).toBe(200)
         expect(response.body.length).toBeGreaterThanOrEqual(3)

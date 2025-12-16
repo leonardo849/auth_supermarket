@@ -6,6 +6,8 @@ import {validateToken, generateJwt} from "../../src/utils/jwt.ts"
 import {IUser} from "../../src/types/interfaces/user.interface.ts"
 import { Roles } from "../../src/types/enums/roles.ts"
 
+
+
 describe("test functions", () => {
     it("should compare a hash", async () => {
         const password = "batman123"
@@ -34,7 +36,6 @@ describe("test functions", () => {
         expect(jwt.length).toBeGreaterThan(0)
     })
     it("should validate a jwt", async() => {
-        
         const token = generateJwt(iUser)
         const payload = validateToken(token) as IUser
         if (payload.id !== iUser.id || payload.role !== iUser.role ) {

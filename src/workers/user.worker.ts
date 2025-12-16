@@ -30,7 +30,7 @@ export class UserWorker {
     private async sendEmailToUnverifiedUsers() {
         const emails = await this.userService.findUneverifiedUsersEmail()
         if (emails.length >= 1) {
-            await RabbitMQService.publishCreatedUserEmail({subject: "warning", text: "you user will be deleted soon, if you don't verify it", to: emails})
+            RabbitMQService.publisWarningEmail(emails)
             Logger.info({file: this.file}, "email to unverified users was published")
             await this.userService.updateEmailWithNotificationToVerificationHasBeenSent(emails)
         }

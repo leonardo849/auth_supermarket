@@ -46,7 +46,7 @@ export class AuthService {
             if (!user.verified) {
                 const compare = await user.compareCode(data.code)
                 if (compare) {
-                    await this.userRepository.verifyUser(id)
+                    await this.userRepository.updateOneById(user._id, {code: null, authUpdatedAt: Date.now(), emailWithNotificationToVerificationHasBeenSent: null})
                     // const user = await this.userRepository.findUserById(id)
                     // const userDto = new FindUserDTO(
                     //     user._id,
@@ -75,21 +75,26 @@ export class AuthService {
             throw errorHandler(err)
         }
     }
-    async changeUserRoleById(id: string, role: Roles) {
-        const user = await this.userRepository.findUserById(id)
-        if (!user) {
-            throw httpError.NotFound("user not found")
+    async changeUserRoleById(id: string, role: Roles): Promise<void> {
+        try {
+            const user = await this.userRepository.findUserById(id)
+            if (!user) {
+                throw httpError.NotFound("user not found")
+            }
+            if (!user.verified) {
+                throw httpError.BadRequest("that user isn't verified")
+            }
+            await this.userRepository.updateOneById(id, {role: role})
+        } catch (err: any) {
+            throw errorHandler(err)
         }
-        if (!user.verified) {
-            throw httpError.BadRequest("that user isn't verified")
-        }
-        await this.userRepository.changeUserRole(role, id)
+        
     }
     async getNewUserCode(id: string): Promise<void> {
         try {
             const code = await generateRandomCode()
             const codeHash = await bcrypt.hash(code, 10)
-            await this.userRepository.updateCode(id, codeHash)
+            await this.userRepository.updateOneById(id, {code: codeHash})
         } catch (err) {
             throw errorHandler(err)
         }
