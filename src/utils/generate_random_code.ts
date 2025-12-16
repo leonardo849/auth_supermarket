@@ -1,11 +1,10 @@
-import { getRandomInt } from "./random_int.ts"
+import { randomInt } from "crypto"
 
 export function generateRandomCode(quantityOfNumbers: number = 6): string {
-    const arr: number[] = []
+    let code: string = ""
     for (let i = 1; i<=quantityOfNumbers; i++) {
-        arr.push(getRandomInt(0, 9))
+        code += randomInt(0, 10).toString()
     }
-    const code = arr.join("")
-
+    
     return code
 }
