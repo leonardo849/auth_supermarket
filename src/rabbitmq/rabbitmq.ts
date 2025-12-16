@@ -18,7 +18,8 @@ export class RabbitMQService {
     private static queueName: string = "queue_auth"
     private static routingKeys = {
         email: "email",
-        userCreatedProduct: "user.product.created"
+        userCreatedProduct: "user.product.created",
+        userVerified: "user.auth.verified"
     }
 
     static async startRabbit(uri: string) {
@@ -106,9 +107,9 @@ export class RabbitMQService {
     static publisWarningEmail(to: string[]) {
         this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: to, subject: "warning", text: `hurry and verify your user. If you don't verify your user, it will be deleted soon`})
     }
-    // static publishVerifiedUser(body: VerifiedUser) {
-    //     this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userVerified, body)
-    // }
+    static publishVerifiedUser(body: VerifiedUser) {
+        this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userVerified, body)
+    }
     private static publishMessages(exchange: string, routingKey: string, body: any): boolean {
         if (process.env.RABBIT_ON && process.env.RABBIT_ON !== "true") {
             Logger.info({file: this.file}, `[fake] sending message to exchange ${exchange} routing key ${routingKey}`)

@@ -41,7 +41,7 @@ export class UserRepository  {
                 {
                     ...data,
                     dateOfBirth: new Date(data.dateOfBirth),
-                    hashCode: data.hashCode
+                    code: data.hashCode
                 }
             )
             // const addressData = data.address

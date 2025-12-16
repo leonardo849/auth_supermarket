@@ -5,7 +5,7 @@ import { UserCacheRepository } from "../repositories/redis/user.cache.repository
 import { RabbitMQService } from "../rabbitmq/rabbitmq.ts";
 import httpError from "http-errors"
 import { generateRandomCode } from "../utils/generate_random_code.ts";
-
+import bcrypt from "bcrypt"
 
 
 export class UserService {
@@ -31,7 +31,8 @@ export class UserService {
                 throw httpError.Conflict("user already exist")
             }
             const code = generateRandomCode()
-            await this.userRepository.createUser({...data, hashCode: code})
+            const hashCode = await bcrypt.hash(code, 10)
+            await this.userRepository.createUser({...data, hashCode: hashCode})
             RabbitMQService.publishCreatedUserEmail([data.email], code)
             
         } catch (err: any) {
