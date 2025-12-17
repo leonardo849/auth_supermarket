@@ -3,6 +3,8 @@ import { Logger } from "../utils/logger.ts"
 import { basename } from "path"
 import usersJson from "./seeds/users.json" with {type: "json"}
 import { UserModel } from "../models/user.model.ts"
+import { UserService } from "../services/user.service.ts"
+import { CreateUserDTO } from "@src/dto/user.dto.ts"
 
 export class Database  {
     private file = basename(import.meta.url)
@@ -20,24 +22,17 @@ export class Database  {
     }
     async migrateUsersToDB() {
         const users = usersJson
+        const userService = new UserService()
         for (const u of users) {
-            const user = new UserModel()
-            user.name = u.name
-            user.address = u.address
-            user.password = u.password
-            user.email = u.email
-            user.dateOfBirth = new Date(u.dateOfBirth as string)
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            //@ts-expect-error
-            user.role = u.role
-            user.verified = true
-            const userInDb = await UserModel.findOne({email: u.email})
-            if (userInDb) {
-                Logger.error(new Error(`there is already a user with that email ${user.email}`), {file: this.file})
-                continue
+            try {
+                const data: CreateUserDTO = {
+                    ...u,
+                }
+                await userService.seedUser({...data, role: u.role})
+            } catch (err: any) {
+                Logger.info({file: this.file}, err)
             }
-            await user.save()
-            Logger.info({file: this.file}, `user with email ${u.email} was created`)
+            
         }
     }
     async disconnectToDB() {

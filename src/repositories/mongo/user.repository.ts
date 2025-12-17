@@ -44,19 +44,23 @@ export class UserRepository  {
                     code: data.hashCode
                 }
             )
-            // const addressData = data.address
-            // user.address = {
-            //     city: addressData.city,
-            //     neighborhood: addressData.neighborhood,
-            //     number: addressData.number,
-            //     state: addressData.state,
-            //     street: addressData.street
-            // }
-            // user.password = data.password
-            // user.name = data.name
-            // user.email = data.email
-            // user.dateOfBirth = new Date(data.dateOfBirth)
-            // user.code = data.hashCode
+            await user.save()
+        } catch (err: any) {
+            Logger.error(err, {file: this.file})
+            throw new DatabaseError(JSON.stringify(err))
+        }
+    }
+    async seedUser(data: CreateUserDTO & {role: string}) {
+        try {
+            const user = new UserModel(
+                {
+                    ...data,
+                    verified: true,
+                    dateOfBirth: new Date(data.dateOfBirth),
+                    role: data.role,
+                    emailWithNotificationToVerificationHasBeenSent: null
+                }
+            )
             await user.save()
         } catch (err: any) {
             Logger.error(err, {file: this.file})

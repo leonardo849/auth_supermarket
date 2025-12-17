@@ -6,6 +6,7 @@ import { RabbitMQService } from "../rabbitmq/rabbitmq.ts";
 import httpError from "http-errors"
 import { generateRandomCode } from "../utils/generate_random_code.ts";
 import bcrypt from "bcrypt"
+import { Roles } from "../types/enums/roles.ts";
 
 
 export class UserService {
@@ -35,6 +36,24 @@ export class UserService {
             await this.userRepository.createUser({...data, hashCode: hashCode})
             RabbitMQService.publishCreatedUserEmail([data.email], code)
             
+        } catch (err: any) {
+            throw errorHandler(err)
+        }
+    }
+    async seedUser(data: CreateUserDTO & {role: string}): Promise<void> {
+        try {
+            const user = await this.userRepository.findUserByEmail(data.email)
+            if (user) {
+                throw httpError.Conflict("user already exist")
+            }
+            await this.userRepository.seedUser(data)
+            const newUser = await this.userRepository.findUserByEmail(data.email)
+            if (!newUser) {
+                throw httpError.InternalServerError(`user wasn't created`)
+            }
+            if (data.role != Roles.CUSTOMER) {
+                RabbitMQService.publishCreatedWorker({auth_updated_at: newUser.authUpdatedAt.toISOString(), id: newUser._id, role: newUser.role})
+            }
         } catch (err: any) {
             throw errorHandler(err)
         }
@@ -69,18 +88,6 @@ export class UserService {
             throw errorHandler(err)
         }
     }
-    // //afterward i will improve the code
-    // async findUserAuthUpdatedAtById(id: string) {
-    //     try {
-    //         const user = await this.userRepository.findUserById(id)
-    //         if (!user) {
-    //             throw httpError.NotFound(`user with id ${id} wasn't found`)
-    //         }
-    //         return user.authUpdatedAt
-    //     } catch (err: any) {
-    //         throw errorHandler(err)
-    //     } 
-    // }
     async findActiveUsers(page: number, limit: number): Promise<FindUserDTO[]> {
         try {
             const users = await this.userRepository.findAllPaginated(page, limit, true)

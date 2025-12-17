@@ -1,7 +1,7 @@
 import { basename } from "path";
 import { Logger } from "../utils/logger.ts";
 import amqp, { Connection, Channel, Options } from "amqplib";
-import { VerifiedUser } from "../dto/events.dto.ts";
+import { CreateWorkerEvent } from "../dto/events.dto.ts";
 import { UserConsumer } from "./user_consumer.ts";
 
 export class RabbitMQService {
@@ -19,7 +19,8 @@ export class RabbitMQService {
     private static routingKeys = {
         email: "email",
         userCreatedProduct: "user.product.created",
-        userVerified: "user.auth.verified"
+        userVerified: "user.auth.verified",
+        userCreatedWorker: "user.auth.created_worker"
     }
 
     static async startRabbit(uri: string) {
@@ -107,8 +108,11 @@ export class RabbitMQService {
     static publisWarningEmail(to: string[]) {
         this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: to, subject: "warning", text: `hurry and verify your user. If you don't verify your user, it will be deleted soon`})
     }
-    static publishVerifiedUser(body: VerifiedUser) {
-        this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userVerified, body)
+    // static publishVerifiedUser(body: VerifiedUser) {
+    //     this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userVerified, body)
+    // }
+    static publishCreatedWorker(body: CreateWorkerEvent) {
+        this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userCreatedWorker, body)
     }
     private static publishMessages(exchange: string, routingKey: string, body: any): boolean {
         if (process.env.RABBIT_ON && process.env.RABBIT_ON !== "true") {

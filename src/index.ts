@@ -87,9 +87,9 @@ export class Index {
     }
     async runProject() {
         this.initEnvironment()
+        await this.startRabbit()
         await this.connectToDatabases()
         await this.migrateSeeds()
-        await this.startRabbit()
         await this.startWorkers()
         this.setupServer()
 
