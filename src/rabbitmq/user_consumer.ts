@@ -6,7 +6,11 @@ export class UserConsumer {
     constructor() {
 
     }
-    async updateProductServiceValue(body: CreatedUserEvent) {
+    async updateProductServiceValue(body: CreatedUserEvent) { 
         await this.userService.updateProductServiceValue(body.id)
+    }
+    async deleteUser(id: string): Promise<string> {
+        const email = await this.userService.deleteUser(id)
+        return email
     }
 }

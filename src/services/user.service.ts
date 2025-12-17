@@ -123,6 +123,16 @@ export class UserService {
             throw errorHandler(err)
         }
     }
+
+    async deleteUser(id: string): Promise<string> {
+        try {
+            const user = await this.findUserById(id)
+            await this.userRepository.deleteUserById(id)
+            return user.email
+        } catch (err: any) {
+            throw errorHandler(err)
+        }
+    }
     
     async deleteUnverifiedUsers() {
         try {

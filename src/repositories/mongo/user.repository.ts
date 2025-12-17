@@ -31,6 +31,10 @@ export class UserRepository  {
         return await this.userModel.find(filter, {password: 0}).lean()
     }
 
+    async deleteUserById(id: string) {
+        return await this.userModel.findByIdAndDelete(id)
+    }
+
     async updateOneById(id: string, data: UpdateQuery<User>): Promise<boolean> {
         const result = await this.userModel.updateOne({_id: id}, data)
         return result.matchedCount > 0

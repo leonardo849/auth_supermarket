@@ -19,6 +19,7 @@ export class RabbitMQService {
     private static routingKeys = {
         email: "email",
         userCreatedProduct: "user.product.created",
+        userCreatedProductError: "user.product.created_error",
         userVerified: "user.auth.verified",
         userCreatedWorker: "user.auth.created_worker"
     }
@@ -32,6 +33,7 @@ export class RabbitMQService {
             await this.connectToRabbit(uri)
             await this.createExchanges()
             await this.createQueue()
+            await this.bindQueue()
             this.consumer()
         } catch (err: unknown) {
             Logger.error(err, {file: this.file})
@@ -64,9 +66,11 @@ export class RabbitMQService {
     private static async createQueue() {
         await this.channel.assertQueue(this.queueName, {durable: true})
         Logger.info({file: this.file}, `creating queue ${this.queueName}`)
+        // await this.channel.bindQueue(this.queueName, this.exchanges.exchangeSale, "user.sale.*")
+    }
+    private static async bindQueue() {
         await this.channel.bindQueue(this.queueName, this.exchanges.exchangeProductAuth, this.routingKeys.userCreatedProduct)
-        await this.channel.bindQueue(this.queueName, this.exchanges.exchangeSale, "user.sale.*")
-    
+        await this.channel.bindQueue(this.queueName, this.exchanges.exchangeProductAuth, this.routingKeys.userCreatedProductError)
     }
     private static  consumer() {
         this.channel.consume(this.queueName, async(msg: any) => {
@@ -85,9 +89,13 @@ export class RabbitMQService {
     }
     private static  async handlerRoutingKeys(json: any, routingKey: string) {
         const userConsumer = new UserConsumer()
-        if (routingKey === "user.product.created") {
+        if (routingKey === this.routingKeys.userCreatedProduct) {
             await userConsumer.updateProductServiceValue(json)
             Logger.info({file: this.file}, `user with id ${json.id} was updated. Its productService value is true`)
+        } else if (routingKey === this.routingKeys.userCreatedProductError) {
+            Logger.info({file: this.file}, `user with id ${json.id} wasn't created in product service. Auth service will delete it`)
+            const email = await userConsumer.deleteUser(json.id)
+            this.publishAccountDeleted([email])
         }
     }
    
@@ -107,6 +115,9 @@ export class RabbitMQService {
     }
     static publisWarningEmail(to: string[]) {
         this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: to, subject: "warning", text: `hurry and verify your user. If you don't verify your user, it will be deleted soon`})
+    }
+    static publishAccountDeleted(to: string[]) {
+        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: to, subject: "your account was deleted", text: "your user was deleted. Our servers couldn't create your user in all of ours systems. Try to create account later"})
     }
     // static publishVerifiedUser(body: VerifiedUser) {
     //     this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userVerified, body)
