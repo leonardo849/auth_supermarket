@@ -2,6 +2,7 @@ import { RequestWithUser } from "@src/types/interfaces/request.interface.ts";
 import { CreateUserDTO } from "../dto/user.dto.ts";
 import { UserService } from "../services/user.service.ts";
 import { NextFunction, Request, Response } from "express";
+import { ValidateDto } from "../utils/decorator_validate_dto.ts";
 
 export class UserController {
     private readonly userService: UserService = new UserService()
@@ -15,6 +16,7 @@ export class UserController {
             next(err)
         }
     }
+    @ValidateDto(CreateUserDTO)
     async createUser(req: Request, res: Response, next: NextFunction) {
         const body = req.body as CreateUserDTO
         try {

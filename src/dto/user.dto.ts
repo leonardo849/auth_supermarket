@@ -123,7 +123,7 @@ export class VerifyCodeDTO {
     code!: string
 }
 
-export class ChangeUseRoleDTO {
+export class ChangeUserRoleDTO {
     @IsEnum(Roles)
     role!: Roles
 }

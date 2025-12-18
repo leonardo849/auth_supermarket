@@ -1,11 +1,13 @@
 import { RequestWithUser } from "../types/interfaces/request.interface.ts";
 import { AuthService } from "../services/auth.service.ts";
 import { NextFunction, Response } from "express";
-import { ChangeUseRoleDTO, LoginUserDTO, VerifyCodeDTO } from "../dto/user.dto.ts";
+import { ChangeUserRoleDTO, LoginUserDTO, VerifyCodeDTO } from "../dto/user.dto.ts";
+import { ValidateDto } from "../utils/decorator_validate_dto.ts";
 
 export class AuthController {
     private readonly authService: AuthService = new AuthService()
 
+    @ValidateDto(LoginUserDTO)
     async loginUser(req: RequestWithUser, res: Response, next: NextFunction) {
         const body = req.body as LoginUserDTO
         try {
@@ -17,6 +19,7 @@ export class AuthController {
             next(err)
         }
     }
+    @ValidateDto(VerifyCodeDTO)
     async verifyCodeUser(req: RequestWithUser, res: Response, next: NextFunction) {
         const body = req.body as VerifyCodeDTO
         try {
@@ -35,9 +38,10 @@ export class AuthController {
             next(err)
         }
     }
+    @ValidateDto(ChangeUserRoleDTO)
     async changeUserRole(req: RequestWithUser, res: Response, next: NextFunction) {
         const id = req.params.id as string
-        const body = req.body as ChangeUseRoleDTO
+        const body = req.body as ChangeUserRoleDTO
         try {
             await this.authService.changeUserRoleById(id, body.role)
             return res.status(200).json({message: "user's role was updated"})
