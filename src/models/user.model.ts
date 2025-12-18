@@ -25,8 +25,8 @@ class Services {
 @pre<User>("save", async function() {
     if (this.role != Roles.CUSTOMER) {
         this.services = {
-            productService: true,
-            saleService: true
+            productService: false,
+            saleService: false
         }
     }
 })

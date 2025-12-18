@@ -16,7 +16,7 @@ export class UserCacheRepository {
             return message
         } catch (err: unknown) {
             Logger.error(err, {file: this.file})
-            return null
+            throw err
         } 
     }
     async findUserById(id: string): Promise<FindUserDTO|FindUserDTO & {authUpdatedAt: Date}|null> {
@@ -25,6 +25,9 @@ export class UserCacheRepository {
         return user
     }
     async deleteUsers(ids: string[]) {
+        if (ids.length === 0) {
+            return
+        }
         const keys: string[] = []
         for (const i of ids) {
             keys.push(`user:${i}`)

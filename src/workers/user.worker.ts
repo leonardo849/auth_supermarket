@@ -1,11 +1,11 @@
 import { Logger } from "../utils/logger.ts";
 import { RabbitMQService } from "../rabbitmq/rabbitmq.ts";
-import { UserService } from "../services/user.service.ts";
 import { basename } from "path";
+import { AuthService } from "../services/auth.service.ts";
 
 export class UserWorker {
     private readonly file: string = basename(import.meta.url)
-    private readonly userService: UserService = new UserService()
+    private readonly authService: AuthService = new AuthService()
     constructor() {
 
     }
@@ -20,19 +20,19 @@ export class UserWorker {
         }, 1000 * 60 * 5)
     }
     async runJobs() {
-        await this.userService.deleteUnverifiedUsers()
+        await this.authService.deleteUnverifiedUsers()
         await this.sendEmailToUnverifiedUsers()
     }
     private async deleteUnverifiedUsers() {
-        await this.userService.deleteUnverifiedUsers()
+        await this.authService.deleteUnverifiedUsers()
         Logger.info({file: this.file}, "deleteUnverifiedUsers was used")
     }
     private async sendEmailToUnverifiedUsers() {
-        const emails = await this.userService.findUneverifiedUsersEmail()
+        const emails = await this.authService.findUneverifiedUsersEmail()
         if (emails.length >= 1) {
             RabbitMQService.publisWarningEmail(emails)
             Logger.info({file: this.file}, "email to unverified users was published")
-            await this.userService.updateEmailWithNotificationToVerificationHasBeenSent(emails)
+            await this.authService.updateEmailWithNotificationToVerificationHasBeenSent(emails)
         }
         Logger.info({file: this.file}, "sendEmailToUnverifiedUsers was used")
         

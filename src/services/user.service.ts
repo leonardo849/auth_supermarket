@@ -7,12 +7,14 @@ import httpError from "http-errors"
 import { generateRandomCode } from "../utils/generate_random_code.ts";
 import bcrypt from "bcrypt"
 import { Roles } from "../types/enums/roles.ts";
+import { Logger } from "../utils/logger.ts";
+import { basename } from "path";
 
 
 export class UserService {
     private readonly userRepository: UserRepository = new UserRepository()
     private readonly userCacheRepository: UserCacheRepository = new UserCacheRepository()
-
+    private readonly file: string = basename(import.meta.url)
     async findAllUsers(pag: number, limit: number): Promise<FindUserDTO[]> {
         try {
             const users = await this.userRepository.findAllPaginated(pag, limit)
@@ -62,11 +64,20 @@ export class UserService {
         try {
             const userRedis = await this.userCacheRepository.findUserById(id)
             if (userRedis) {
+                const mapped = {
+                    ...userRedis,
+                    createdAt: new Date(userRedis.createdAt),
+                    updatedAt: new Date(userRedis.updatedAt),
+                }
                 if (!includeAuthUpdatedAt) {
-                    return userRedis
+                    return mapped
                 } else  {
                     if ("authUpdatedAt" in userRedis) {
-                        return userRedis
+                        const mappedWithUpdatedAt = {
+                            ...mapped,
+                            authUpdatedAt: new Date(userRedis.authUpdatedAt)
+                        }
+                       return mappedWithUpdatedAt
                     }
                 }
             }
@@ -82,7 +93,9 @@ export class UserService {
                 this.userCacheRepository.setUser(userMapped, user.authUpdatedAt) 
                 return userWithAuthUpdatedAt
             }
-            this.userCacheRepository.setUser(userMapped) // don't wait for it
+            setImmediate(() => {
+                this.setUserCache(id)
+            })
             return userMapped
         } catch (err: any) {
             throw errorHandler(err)
@@ -100,29 +113,17 @@ export class UserService {
             throw errorHandler(err)
         }
     }
-    async findUneverifiedUsersEmail(): Promise<string[]> {
-        try {
-            const twentyTwoHoursAgo = new Date(Date.now() - 22 * 60 * 60 * 1000)
-            const users = await this.userRepository.findAllUsers({verified: false, emailWithNotificationToVerificationHasBeenSent: false, createdAt: {$lte: twentyTwoHoursAgo}})
-            const emails: string[] = []
-            for (const u of users) {
-                emails.push(u.email)
-            }
-            return emails
-        } catch (err: any) {
-            throw errorHandler(err)
-        }
-    }
-    async updateEmailWithNotificationToVerificationHasBeenSent(emails: string[]): Promise<void> {
-        try {
-            const updatedQuantity = await this.userRepository.updateMany({email: {$in: emails}}, {emailWithNotificationToVerificationHasBeenSent: true})
-            if (updatedQuantity === 0) {
-                throw new Error("no user was updated")
-            }
-        } catch (err: any) {
-            throw errorHandler(err)
-        }
-    }
+    
+    // async updateEmailWithNotificationToVerificationHasBeenSent(emails: string[]): Promise<void> {
+    //     try {
+    //         const updatedQuantity = await this.userRepository.updateMany({email: {$in: emails}}, {$set: {emailWithNotificationToVerificationHasBeenSent: true}})
+    //         if (updatedQuantity === 0) {
+    //             throw new Error("no user was updated")
+    //         }
+    //     } catch (err: any) {
+    //         throw errorHandler(err)
+    //     }
+    // }
 
     async deleteUser(id: string): Promise<string> {
         try {
@@ -135,28 +136,29 @@ export class UserService {
         }
     }
     
-    async deleteUnverifiedUsers() {
+    
+    
+    private async setUserCache(id: string) {
         try {
-            const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-            const usersNotVerfiied = await this.userRepository.findAllUsers({verified: false, emailWithNotificationToVerificationHasBeenSent: true, createdAt: {
-                $lte: oneDayAgo
-            }})
-            const idUsers: string[]  = usersNotVerfiied.map(element => element._id)
-            await this.userRepository.deleteMany({verified: false, emailWithNotificationToVerificationHasBeenSent: true, createdAt: {
-                $lte: oneDayAgo
-            }})
-            await this.userCacheRepository.deleteUsers(idUsers)
-            
-        } catch (err: any) {
-            throw errorHandler(err)
-        }
-    }
-    async updateProductServiceValue(id: string) {
-        try {
-            await this.findUserById(id)
-            await this.userRepository.updateOneById(id, {services: {productService: true}})
-        } catch (err: any) {
-            throw errorHandler(err)
+            const user = await this.userRepository.findUserById(id)
+            if (!user) {
+                throw new Error(`user with id ${id} wasn't found`)
+            }
+            const userDto = new FindUserDTO(
+                user._id,
+                user.name,
+                user.email,
+                user.role,
+                user.dateOfBirth,
+                user.active,
+                user.address,
+                user.verified,
+                user.createdAt,
+                user.updatedAt
+            )
+            await this.userCacheRepository.setUser(userDto)
+        } catch (err) {
+            Logger.error(err, {file: this.file})
         }
     }
 }

@@ -2,11 +2,13 @@ import { User, UserModel } from "../../models/user.model.ts"
 import { basename } from "path"
 import { DatabaseError } from "../../classes/database_error.ts"
 import { Logger } from "../../utils/logger.ts"
-import { CreateUserDTO } from "../../dto/user.dto.ts"
+import { CreateUserDTO} from "../../dto/user.dto.ts"
 import {decoratorValidateFilter} from "../../utils/decorator_validate_filter_mongo.ts"
 import { FilterQuery, UpdateQuery } from "mongoose"
-import {ALLOWED_MONGO_OPERATORS} from "../../policies/mongo_policies.ts"
-import {ALLOWED_USER_FILTER_FIELDS} from "../../policies/users/user_policies.ts"
+import {ALLOWED_MONGO_OPERATORS, ALLOWED_UPDATE_OPERATORS} from "../../policies/mongo_policies.ts"
+import {ALLOWED_USER_FILTER_FIELDS, ALLOWED_USER_UPDATE_FIELDS} from "../../policies/users/user_policies.ts"
+import { decoratorValidateUpdateQuery } from "../../utils/decorator_validate_mongo_query.ts"
+
 
 
 type userWithoutPassword = Omit<User, "password">
@@ -18,6 +20,7 @@ export class UserRepository  {
         
     }
     
+
     async findAllPaginated(page:number = 1, limit: number = 20, active?: boolean): Promise<userWithoutPassword[]> {
         const filter: {active?: boolean} = {}
         if (active != undefined) {
@@ -35,6 +38,7 @@ export class UserRepository  {
         return await this.userModel.findByIdAndDelete(id)
     }
 
+    @decoratorValidateUpdateQuery({allowedFields: ALLOWED_USER_UPDATE_FIELDS, allowedOperators: ALLOWED_UPDATE_OPERATORS})
     async updateOneById(id: string, data: UpdateQuery<User>): Promise<boolean> {
         const result = await this.userModel.updateOne({_id: id}, data)
         return result.matchedCount > 0
@@ -90,6 +94,7 @@ export class UserRepository  {
         return (await this.userModel.deleteMany(filter)).deletedCount
     }
     @decoratorValidateFilter({allowedFields: ALLOWED_USER_FILTER_FIELDS, allowedOperators: ALLOWED_MONGO_OPERATORS})
+    @decoratorValidateUpdateQuery({allowedFields: ALLOWED_USER_UPDATE_FIELDS, allowedOperators: ALLOWED_UPDATE_OPERATORS})
     async updateMany(filter: FilterQuery<User>, data: UpdateQuery<User>): Promise<number> {
         const result = await this.userModel.updateMany(filter, data)
         return result.modifiedCount

@@ -8,12 +8,15 @@ import { User } from "../models/user.model.ts";
 import httpError from "http-errors"
 import { generateRandomCode } from "../utils/generate_random_code.ts";
 import bcrypt from "bcrypt"
-import { UserCacheRepository } from "../repositories/redis/user.cache.repository.ts";
 import { Roles } from "../types/enums/roles.ts";
+import { UserCacheRepository } from "../repositories/redis/user.cache.repository.ts";
+import { Logger } from "../utils/logger.ts";
+import { basename } from "path";
 
 
 export class AuthService {
     private readonly userCacheRepository: UserCacheRepository = new UserCacheRepository()
+    private readonly file: string = basename(import.meta.url)
     private readonly userRepository: UserRepository = new UserRepository()
     constructor() {
 
@@ -40,32 +43,37 @@ export class AuthService {
             throw errorHandler(err)
         }
     }
+    async updateEmailWithNotificationToVerificationHasBeenSent(emails: string[]): Promise<void> {
+        try {
+            const updatedQuantity = await this.userRepository.updateMany({email: {$in: emails}}, {$set: {emailWithNotificationToVerificationHasBeenSent: true}})
+            if (updatedQuantity === 0) {
+                throw new Error("no user was updated")
+            }
+            return
+        } catch (err: any) {
+            Logger.error(err, {file: this.file})
+            throw err
+        }
+    }
     async verifyUserCode(data: VerifyCodeDTO, id:string): Promise<void> {
         try {
             const user = await this.userRepository.findUserById(id) as User// i don't need to check again if user exist
             if (!user.verified) {
                 const compare = await user.compareCode(data.code)
                 if (compare) {
-                    await this.userRepository.updateOneById(user._id, {code: null, authUpdatedAt: Date.now(), emailWithNotificationToVerificationHasBeenSent: null})
-                    // const user = await this.userRepository.findUserById(id)
-                    // const userDto = new FindUserDTO(
-                    //     user._id,
-                    //     user.name,
-                    //     user.email,
-                    //     user.role,
-                    //     user.dateOfBirth,
-                    //     user.active, 
-                    //     new FindAddressDTO(user.address.street, user.address.number, user.address.neighborhood, user.address.city, user.address.state),
-                    //     user.verified,
-                    //     user.createdAt,
-                    //     user.updatedAt
-                    // )
-                    // queueMicrotask(() => {
-                    //     this.userCacheRepository
-                    //         .createUser(userDto)
-                    //         .catch(err => Logger.error(err, {file: basename(import.meta.url)}))
-                    // })
-                    // RabbitMQService.publishVerifiedUser(new VerifiedUser(userDto.id, userDto.name, userDto.email, userDto.updatedAt))
+                    await this.userRepository.updateOneById(user._id, {
+                        $set: {
+                            authUpdatedAt: Date.now(),
+                            verified: true
+                        },
+                        $unset: {
+                            code: "",
+                            emailWithNotificationToVerificationHasBeenSent: ""
+                        }
+                    })
+                    setImmediate(() => {
+                        this.setUserInCache(id)
+                    })
                     return
                 } else {
                     throw httpError.BadRequest("your code is wrong")
@@ -84,7 +92,10 @@ export class AuthService {
             if (!user.verified) {
                 throw httpError.BadRequest("that user isn't verified")
             }
-            await this.userRepository.updateOneById(id, {role: role})
+            await this.userRepository.updateOneById(id, {$set:{role: role, authUpdatedAt: Date.now()}})
+            setImmediate(() => {
+                this.setUserInCache(id)
+            })
         } catch (err: any) {
             throw errorHandler(err)
         }
@@ -94,8 +105,73 @@ export class AuthService {
         try {
             const code = await generateRandomCode()
             const codeHash = await bcrypt.hash(code, 10)
-            await this.userRepository.updateOneById(id, {code: codeHash})
+            await this.userRepository.updateOneById(id, {$set:{code: codeHash}})
         } catch (err) {
+            throw errorHandler(err)
+        }
+    }
+    private async setUserInCache(id: string) {
+        try {
+                const searchedUser = await this.userRepository.findUserById(id)
+                if (!searchedUser) {
+                    throw new Error(`user with id ${id} wasn't found`)
+                }
+                const newUserDTO = new FindUserDTO(
+                searchedUser._id,
+                searchedUser.name,
+                searchedUser.email,
+                searchedUser.role,
+                searchedUser.dateOfBirth,
+                searchedUser.active,
+                searchedUser.address,
+                searchedUser.verified,
+                searchedUser.createdAt,
+                searchedUser.updatedAt)
+                await this.userCacheRepository.setUser(newUserDTO, searchedUser.authUpdatedAt)
+        } catch (err: any) {
+            Logger.error(err, {file: this.file})
+            throw err
+        }
+    }
+    async deleteUnverifiedUsers() {
+        try {
+            const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+            const usersNotVerfiied = await this.userRepository.findAllUsers({verified: false, emailWithNotificationToVerificationHasBeenSent: true, createdAt: {
+                $lte: oneDayAgo
+            }})
+            await this.userRepository.deleteMany({verified: false, emailWithNotificationToVerificationHasBeenSent: true, createdAt: {
+                $lte: oneDayAgo
+            }})
+            const idUsers: string[]  = usersNotVerfiied.map(element => element._id)
+            await this.userCacheRepository.deleteUsers(idUsers)
+            
+        } catch (err: any) {
+           Logger.error(err, {file: this.file})
+           throw err
+        }
+    }
+    async updateProductServiceValue(id: string) {
+        try {
+            const user = await this.userRepository.findUserById(id)
+            if (!user) {
+                throw new Error(`user with id ${id} wasn't found`)
+            }
+            await this.userRepository.updateOneById(id, {$set:{services: {productService: true}}})
+        } catch (err: any) {
+            Logger.error(err, {file: this.file})
+            throw err
+        }
+    }
+    async findUneverifiedUsersEmail(): Promise<string[]> {
+        try {
+            const twentyTwoHoursAgo = new Date(Date.now() - 22 * 60 * 60 * 1000)
+            const users = await this.userRepository.findAllUsers({verified: false, emailWithNotificationToVerificationHasBeenSent: false, createdAt: {$lte: twentyTwoHoursAgo}})
+            const emails: string[] = []
+            for (const u of users) {
+                emails.push(u.email)
+            }
+            return emails
+        } catch (err: any) {
             throw errorHandler(err)
         }
     }
