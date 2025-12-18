@@ -128,6 +128,7 @@ export class UserService {
         try {
             const user = await this.findUserById(id)
             await this.userRepository.deleteUserById(id)
+            await this.userCacheRepository.deleteUsers([id])
             return user.email
         } catch (err: any) {
             throw errorHandler(err)
@@ -137,9 +138,15 @@ export class UserService {
     async deleteUnverifiedUsers() {
         try {
             const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+            const usersNotVerfiied = await this.userRepository.findAllUsers({verified: false, emailWithNotificationToVerificationHasBeenSent: true, createdAt: {
+                $lte: oneDayAgo
+            }})
+            const idUsers: string[]  = usersNotVerfiied.map(element => element._id)
             await this.userRepository.deleteMany({verified: false, emailWithNotificationToVerificationHasBeenSent: true, createdAt: {
                 $lte: oneDayAgo
             }})
+            await this.userCacheRepository.deleteUsers(idUsers)
+            
         } catch (err: any) {
             throw errorHandler(err)
         }
