@@ -1,7 +1,7 @@
 import { RedisClientType } from "redis";
 import { RedisClient } from "../../cache/cache.ts";
 import { FindUserDTO } from "../../dto/user.dto.ts";
-import { Logger } from "../../utils/logger.ts";
+import { Logger } from "../../utils/logger/logger.ts";
 import { basename } from "path";
 
 export class UserCacheRepository {
@@ -19,7 +19,7 @@ export class UserCacheRepository {
             throw err
         } 
     }
-    async findUserById(id: string): Promise<FindUserDTO|FindUserDTO & {authUpdatedAt: Date}|null> {
+    async findUserById(id: string): Promise<FindUserDTO|FindUserDTO & {authUpdatedAt: string}|null> {
         const data = await this.redisClient.get(`user:${id}`)
         const user = data ? JSON.parse(data) : null
         return user

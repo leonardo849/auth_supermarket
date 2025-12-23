@@ -1,5 +1,5 @@
 import { Server } from "./server/server.ts";
-import { Logger } from "./utils/logger.ts";
+import { Logger } from "./utils/logger/logger.ts";
 import { basename } from "path";
 import dotenv from "dotenv"
 import { Database } from "./database/db.ts";

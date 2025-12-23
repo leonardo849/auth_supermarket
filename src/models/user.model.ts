@@ -1,4 +1,4 @@
-import {  compare } from "../utils/hash.ts";
+import {  compare } from "../utils/crypto/hash.ts";
 import { Roles } from "../types/enums/roles.ts";
 import { getModelForClass, prop, pre, modelOptions } from "@typegoose/typegoose";
 import bcrypt from "bcrypt"

@@ -1,4 +1,4 @@
-import { validateMongoFilter } from "./validate_filter_mongo.ts"
+import { validateMongoFilter } from "../policies/validate_filter_mongo.ts"
 
 
 export function decoratorValidateFilter(policy: {allowedFields: string[], allowedOperators: string[]}) {

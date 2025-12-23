@@ -1,7 +1,7 @@
 import { RequestWithUser } from "@src/types/interfaces/request.interface.ts";
-import { validateToken, verifyJwtIat } from "../../utils/jwt.ts";
+import { validateToken, verifyJwtIat } from "../../utils/crypto/jwt.ts";
 import { NextFunction, Response } from "express";
-import { Logger } from "../../utils/logger.ts";
+import { Logger } from "../../utils/logger/logger.ts";
 import { basename } from "path";
 import { UserService } from "../../services/user.service.ts";
 import httpError from "http-errors"

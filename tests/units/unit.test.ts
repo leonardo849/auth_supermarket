@@ -1,7 +1,7 @@
-import {compare} from "../../src/utils/hash.ts"
-import {generateRandomCode} from "../../src/utils/generate_random_code.ts"
+import {compare} from "../../src/utils/crypto/hash.ts"
+import {generateRandomCode} from "../../src/utils/crypto/generate_random_code.ts"
 import bcrypt from "bcrypt"
-import {validateToken, generateJwt} from "../../src/utils/jwt.ts"
+import {validateToken, generateJwt} from "../../src/utils/crypto/jwt.ts"
 import {IUser} from "../../src/types/interfaces/user.interface.ts"
 import { Roles } from "../../src/types/enums/roles.ts"
 

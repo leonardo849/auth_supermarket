@@ -1,6 +1,6 @@
 import { IRoute, Router } from "express";
 import { UserController } from "../../controllers/user.controller.ts";
-import { Logger } from "../../utils/logger.ts";
+import { Logger } from "../../utils/logger/logger.ts";
 import { basename } from "path";
 import { ChangeUserRoleDTO, CreateUserDTO, LoginUserDTO, VerifyCodeDTO } from "../../dto/user.dto.ts";
 import { AuthController } from "../../controllers/auth.controller.ts";

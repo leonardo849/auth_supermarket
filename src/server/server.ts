@@ -1,6 +1,6 @@
 import { BaseServer } from "../classes/server.abstract.ts";
 import  express, { IRoute, Request, Response} from "express"
-import { Logger } from "../utils/logger.ts";
+import { Logger } from "../utils/logger/logger.ts";
 import { basename } from "path";
 import { UserRoutes } from "./routes/user.routes.ts";
 import { errorHandler } from "./middlewares/error_handler.ts";

@@ -2,15 +2,15 @@ import { UserRepository } from "../repositories/mongo/user.repository.ts";
 import { FindAddressDTO, FindUserDTO, LoginUserDTO, VerifyCodeDTO } from "../dto/user.dto.ts";
 import jwt from "jsonwebtoken"
 import { IUser } from "../types/interfaces/user.interface.ts";
-import { errorHandler } from "../utils/error_handler.ts";
+import { errorHandler } from "../utils/errors/error_handler.ts";
 import createError from "http-errors"
 import { User } from "../models/user.model.ts";
 import httpError from "http-errors"
-import { generateRandomCode } from "../utils/generate_random_code.ts";
+import { generateRandomCode } from "../utils/crypto/generate_random_code.ts";
 import bcrypt from "bcrypt"
 import { Roles } from "../types/enums/roles.ts";
 import { UserCacheRepository } from "../repositories/redis/user.cache.repository.ts";
-import { Logger } from "../utils/logger.ts";
+import { Logger } from "../utils/logger/logger.ts";
 import { basename } from "path";
 
 

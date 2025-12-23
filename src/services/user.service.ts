@@ -1,13 +1,13 @@
 import { UserRepository } from "../repositories/mongo/user.repository.ts";
 import { CreateUserDTO, FindAddressDTO, FindUserDTO } from "../dto/user.dto.ts";
-import { errorHandler } from "../utils/error_handler.ts";
+import { errorHandler } from "../utils/errors/error_handler.ts";
 import { UserCacheRepository } from "../repositories/redis/user.cache.repository.ts";
 import { RabbitMQService } from "../rabbitmq/rabbitmq.ts";
 import httpError from "http-errors"
-import { generateRandomCode } from "../utils/generate_random_code.ts";
+import { generateRandomCode } from "../utils/crypto/generate_random_code.ts";
 import bcrypt from "bcrypt"
 import { Roles } from "../types/enums/roles.ts";
-import { Logger } from "../utils/logger.ts";
+import { Logger } from "../utils/logger/logger.ts";
 import { basename } from "path";
 
 

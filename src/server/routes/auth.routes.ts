@@ -6,7 +6,7 @@ import { checkVerify } from "../middlewares/check_verify.ts";
 import { ChangeUserRoleDTO, LoginUserDTO, VerifyCodeDTO } from "../../dto/user.dto.ts";
 import { Roles } from "../../types/enums/roles.ts";
 import { checkRole } from "../middlewares/check_role.ts";
-import { Logger } from "../../utils/logger.ts";
+import { Logger } from "../../utils/logger/logger.ts";
 
 export class AuthRoutes {
     private readonly authController: AuthController = new AuthController()

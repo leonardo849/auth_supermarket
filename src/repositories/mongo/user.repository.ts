@@ -1,13 +1,13 @@
 import { User, UserModel } from "../../models/user.model.ts"
 import { basename } from "path"
 import { DatabaseError } from "../../classes/database_error.ts"
-import { Logger } from "../../utils/logger.ts"
+import { Logger } from "../../utils/logger/logger.ts"
 import { CreateUserDTO} from "../../dto/user.dto.ts"
-import {decoratorValidateFilter} from "../../utils/decorator_validate_filter_mongo.ts"
+import {decoratorValidateFilter} from "../../utils/decorators/decorator_validate_filter_mongo.ts"
 import { FilterQuery, UpdateQuery } from "mongoose"
 import {ALLOWED_MONGO_OPERATORS, ALLOWED_UPDATE_OPERATORS} from "../../policies/mongo_policies.ts"
 import {ALLOWED_USER_FILTER_FIELDS, ALLOWED_USER_UPDATE_FIELDS} from "../../policies/users/user_policies.ts"
-import { decoratorValidateUpdateQuery } from "../../utils/decorator_validate_mongo_query.ts"
+import { decoratorValidateUpdateQuery } from "../../utils/decorators/decorator_validate_mongo_query.ts"
 
 
 

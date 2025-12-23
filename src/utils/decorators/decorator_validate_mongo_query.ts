@@ -1,4 +1,4 @@
-import {validateUpdateQuery} from  "./validate_mongo_query.ts"
+import {validateUpdateQuery} from  "../policies/validate_mongo_query.ts"
 
 
 export function decoratorValidateUpdateQuery(policy: {allowedFields: string[], allowedOperators: string[]}) {

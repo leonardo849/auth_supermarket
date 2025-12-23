@@ -2,7 +2,7 @@ import { RequestWithUser } from "@src/types/interfaces/request.interface.ts"
 import { plainToInstance } from "class-transformer"
 import { validate } from "class-validator"
 import { basename } from "path"
-import { Logger } from "./logger.ts"
+import { Logger } from "../logger/logger.ts"
 import createHttpError from "http-errors"
 
 const file = basename(import.meta.url)

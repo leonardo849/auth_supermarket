@@ -2,7 +2,7 @@ import { RequestWithUser } from "../types/interfaces/request.interface.ts";
 import { AuthService } from "../services/auth.service.ts";
 import { NextFunction, Response } from "express";
 import { ChangeUserRoleDTO, LoginUserDTO, VerifyCodeDTO } from "../dto/user.dto.ts";
-import { ValidateDto } from "../utils/decorator_validate_dto.ts";
+import { ValidateDto } from "../utils/decorators/decorator_validate_dto.ts";
 
 export class AuthController {
     private readonly authService: AuthService = new AuthService()

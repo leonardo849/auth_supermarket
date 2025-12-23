@@ -1,5 +1,5 @@
 import { UpdateQuery } from "mongoose"
-import { isPlainObject } from "./is_plain_object.ts"
+import { isPlainObject } from "../is_plain_object.ts"
 
 export function validateUpdateQuery<T>(
 	update: UpdateQuery<T>,

@@ -1,5 +1,5 @@
 import { basename } from "path"
-import { Logger } from "../../utils/logger.ts"
+import { Logger } from "../../utils/logger/logger.ts"
 import {NextFunction, Request, Response} from "express"
 import httpError from "http-errors"
 

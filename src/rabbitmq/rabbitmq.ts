@@ -1,5 +1,5 @@
 import { basename } from "path";
-import { Logger } from "../utils/logger.ts";
+import { Logger } from "../utils/logger/logger.ts";
 import amqp, { Connection, Channel, Options } from "amqplib";
 import { CreateWorkerEvent } from "../dto/events.dto.ts";
 import { UserConsumer } from "./user_consumer.ts";

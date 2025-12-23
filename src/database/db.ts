@@ -1,5 +1,5 @@
 import mongoose, {connect} from "mongoose"
-import { Logger } from "../utils/logger.ts"
+import { Logger } from "../utils/logger/logger.ts"
 import { basename } from "path"
 import usersJson from "./seeds/users.json" with {type: "json"}
 import { UserModel } from "../models/user.model.ts"

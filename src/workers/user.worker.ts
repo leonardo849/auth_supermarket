@@ -1,4 +1,4 @@
-import { Logger } from "../utils/logger.ts";
+import { Logger } from "../utils/logger/logger.ts";
 import { RabbitMQService } from "../rabbitmq/rabbitmq.ts";
 import { basename } from "path";
 import { AuthService } from "../services/auth.service.ts";

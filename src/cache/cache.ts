@@ -1,5 +1,5 @@
 import { basename } from "path";
-import { Logger } from "../utils/logger.ts";
+import { Logger } from "../utils/logger/logger.ts";
 import { createClient, RedisClientType } from "redis";
 
 export class RedisClient {
