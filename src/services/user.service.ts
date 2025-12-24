@@ -9,6 +9,7 @@ import bcrypt from "bcrypt"
 import { Roles } from "../types/enums/roles.ts";
 import { Logger } from "../utils/logger/logger.ts";
 import { basename } from "path";
+import { Services, User } from "../models/user.model.ts";
 
 
 export class UserService {
@@ -114,16 +115,18 @@ export class UserService {
         }
     }
     
-    // async updateEmailWithNotificationToVerificationHasBeenSent(emails: string[]): Promise<void> {
-    //     try {
-    //         const updatedQuantity = await this.userRepository.updateMany({email: {$in: emails}}, {$set: {emailWithNotificationToVerificationHasBeenSent: true}})
-    //         if (updatedQuantity === 0) {
-    //             throw new Error("no user was updated")
-    //         }
-    //     } catch (err: any) {
-    //         throw errorHandler(err)
-    //     }
-    // }
+    async getUserServicesById(id: string): Promise<Services> {
+        try {
+            const user = await this.userRepository.findUserById(id)
+            if (!user) {
+                throw new Error(`user with id ${id} doesn't exist`)
+            }
+            return user.services
+        } catch (err: unknown) {
+            Logger.error(err, {file: this.file})
+            throw err
+        }
+    }
 
     async deleteUser(id: string): Promise<string> {
         try {

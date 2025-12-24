@@ -11,3 +11,10 @@ export class CreatedUserEvent {
 
     }
 }
+
+
+export class DeletedUserEvent {
+    constructor(readonly id: string) {
+
+    }
+}

@@ -8,7 +8,7 @@ export function decoratorValidateUpdateQuery(policy: {allowedFields: string[], a
         descriptor.value = function(...args: any[]) {
             const query = args[1]
             if (!validateUpdateQuery(query, policy.allowedFields, policy.allowedOperators)) {
-                throw new Error(`invalid mongo update query in ${target.constructor.name}.${property}`)
+                throw new Error(`invalid mongo update query in ${target.constructor.name}.${property}. query: ${JSON.stringify(query)}`)
             }
             return originalMethod.apply(this, args)
         }

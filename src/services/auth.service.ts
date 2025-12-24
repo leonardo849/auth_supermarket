@@ -154,7 +154,7 @@ export class AuthService {
         try {
             const user = await this.userRepository.findUserById(id)
             if (!user) {
-                throw new Error(`user with id ${id} wasn't found`)
+                throw new httpError.NotFound(`user with id ${id} wasn't found`)
             }
             await this.userRepository.updateOneById(id, {$set:{services: {productService: true}}})
         } catch (err: any) {

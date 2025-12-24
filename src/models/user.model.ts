@@ -3,7 +3,7 @@ import { Roles } from "../types/enums/roles.ts";
 import { getModelForClass, prop, pre, modelOptions } from "@typegoose/typegoose";
 import bcrypt from "bcrypt"
 
-class Services {
+export class Services {
 
     @prop({default: false})
     productService!: boolean

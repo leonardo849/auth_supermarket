@@ -17,7 +17,9 @@ export const ALLOWED_USER_UPDATE_FIELDS = [
     "role",
     "emailWithNotificationToVerificationHasBeenSent",
     "authUpdatedAt",
-    "code"
+    "code",
+    "services",
+    "productService"
 ] 
 
 

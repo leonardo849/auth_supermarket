@@ -1,8 +1,9 @@
 import { basename } from "path";
 import { Logger } from "../utils/logger/logger.ts";
 import amqp, { Connection, Channel, Options } from "amqplib";
-import { CreateWorkerEvent } from "../dto/events.dto.ts";
+import { CreateWorkerEvent, DeletedUserEvent } from "../dto/events.dto.ts";
 import { UserConsumer } from "./user_consumer.ts";
+import httpError from "http-errors"
 
 export class RabbitMQService {
     private static connection: amqp.ChannelModel
@@ -13,7 +14,8 @@ export class RabbitMQService {
         exchangeAuth: "auth_topic",
         exchangePayment: "payment_topic",
         exchangeProductAuth: "product_auth_direct",
-        exchangeSale: "sale_topic"
+        exchangeSale: "sale_topic",
+        exchangeAuthProduct: "auth_product_direct"
     }
     private static queueName: string = "queue_auth"
     private static routingKeys = {
@@ -21,7 +23,8 @@ export class RabbitMQService {
         userCreatedProduct: "user.product.created",
         userCreatedProductError: "user.product.created_error",
         userVerified: "user.auth.verified",
-        userCreatedWorker: "user.auth.created_worker"
+        userCreatedWorker: "user.auth.created_worker",
+        userDeleted: "user.auth.deleted"
     }
 
     static async startRabbit(uri: string) {
@@ -53,15 +56,14 @@ export class RabbitMQService {
         const exchangeAuth = this.exchanges.exchangeAuth
         await this.channel.assertExchange(exchangeAuth, "topic", {durable: true})
         Logger.info({file: this.file}, `creating exchange ${exchangeAuth}`)
-        // const exchangePayment = this.exchanges.exchangePayment
-        // await this.channel.assertExchange(exchangePayment, "topic", {durable: true})
-        // Logger.info({file: this.file}, `creating exchange ${exchangePayment}`)
         const exchangeProductAuth = this.exchanges.exchangeProductAuth
         await this.channel.assertExchange(exchangeProductAuth, "direct", {durable: true})
         Logger.info({file: this.file}, `creating exchange ${exchangeProductAuth}`)
         const exchangeSale = this.exchanges.exchangeSale
         await this.channel.assertExchange(exchangeSale, "topic", {durable: true})
         Logger.info({file: this.file}, `creating exchange ${exchangeSale}`)
+        // const exchangeAuthProductDirect = this.exchanges.exchangeAuthProduct
+        // await this.channel.assertExchange(exchangeAuthProductDirect, "direct", {durable: true})
     }
     private static async createQueue() {
         await this.channel.assertQueue(this.queueName, {durable: true})
@@ -90,12 +92,24 @@ export class RabbitMQService {
     private static  async handlerRoutingKeys(json: any, routingKey: string) {
         const userConsumer = new UserConsumer()
         if (routingKey === this.routingKeys.userCreatedProduct) {
-            await userConsumer.updateProductServiceValue(json)
-            Logger.info({file: this.file}, `user with id ${json.id} was updated. Its productService value is true`)
+            try {
+                await userConsumer.updateProductServiceValue(json)
+                Logger.info({file: this.file}, `user with id ${json.id} was updated. Its productService value is true`)
+            } catch (err: any) {
+                if (err instanceof httpError.HttpError && err.status === 404) {
+                    this.publishDeletedWorker({id: json.id})
+                }
+                Logger.error(err, {file: this.file})
+                throw err
+            }
         } else if (routingKey === this.routingKeys.userCreatedProductError) {
-            Logger.info({file: this.file}, `user with id ${json.id} wasn't created in product service. Auth service will delete it`)
+            Logger.info({file: this.file}, `user with id ${json.id} wasn't created in product service. Auth service will delete it if user's product service value is false`)
             const email = await userConsumer.deleteUser(json.id)
-            this.publishAccountDeleted([email])
+            if (email) {
+                this.publishAccountDeleted([email])
+            }
+            Logger.info({file: this.file}, `it wasn't possible to delete user with id ${json.id}`)
+            
         }
     }
    
@@ -124,6 +138,9 @@ export class RabbitMQService {
     // }
     static publishCreatedWorker(body: CreateWorkerEvent) {
         this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userCreatedWorker, body)
+    }
+    static publishDeletedWorker(body: DeletedUserEvent) {
+        this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userDeleted, body)   
     }
     private static publishMessages(exchange: string, routingKey: string, body: any): boolean {
         if (process.env.RABBIT_ON && process.env.RABBIT_ON !== "true") {
