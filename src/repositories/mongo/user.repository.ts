@@ -93,6 +93,14 @@ export class UserRepository  {
     async deleteMany(filter: FilterQuery<User>): Promise<number> {
         return (await this.userModel.deleteMany(filter)).deletedCount
     }
+    async deleteOneById(id: string) {
+        try {
+            await this.userModel.findByIdAndDelete(id)
+        } catch (err: any) {
+            Logger.error(err, {file: this.file})
+            throw new DatabaseError(err)
+        }
+    }
     @decoratorValidateFilter({allowedFields: ALLOWED_USER_FILTER_FIELDS, allowedOperators: ALLOWED_MONGO_OPERATORS})
     @decoratorValidateUpdateQuery({allowedFields: ALLOWED_USER_UPDATE_FIELDS, allowedOperators: ALLOWED_UPDATE_OPERATORS})
     async updateMany(filter: FilterQuery<User>, data: UpdateQuery<User>): Promise<number> {

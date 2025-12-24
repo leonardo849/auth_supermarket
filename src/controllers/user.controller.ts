@@ -3,6 +3,7 @@ import { CreateUserDTO } from "../dto/user.dto.ts";
 import { UserService } from "../services/user.service.ts";
 import { NextFunction, Request, Response } from "express";
 import { ValidateDto } from "../utils/decorators/decorator_validate_dto.ts";
+import { IUser } from "@src/types/interfaces/user.interface.ts";
 
 export class UserController {
     private readonly userService: UserService = new UserService()
@@ -31,6 +32,15 @@ export class UserController {
         try {
             const users = await this.userService.findActiveUsers(page, limit)
             return res.status(200).json(users)
+        } catch (err) {
+            next(err)
+        }
+    }
+    async deleteOwnUser(req: RequestWithUser, res: Response, next: NextFunction) {
+        const {id} = req.user as IUser
+        try {
+            await this.userService.deleteUser(id)
+            return res.status(200).json({message: `user with id ${id} was deleted`})
         } catch (err) {
             next(err)
         }

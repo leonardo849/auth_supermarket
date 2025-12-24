@@ -133,6 +133,7 @@ export class UserService {
             const user = await this.findUserById(id)
             await this.userRepository.deleteUserById(id)
             await this.userCacheRepository.deleteUsers([id])
+            RabbitMQService.publishDeletedWorker({id: id})
             return user.email
         } catch (err: any) {
             throw errorHandler(err)

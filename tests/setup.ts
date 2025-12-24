@@ -2,6 +2,7 @@ import { Index } from "../src/index"
 import mongoose from "mongoose"
 import {Express} from "express"
 
+
 export const genericalPassword = ";0p$e(v^EY38"
 
 let index: Index
@@ -13,6 +14,8 @@ async function deleteAllInMongodb() {
         await collections[key].deleteMany({})
     }
 }
+
+
 
 beforeAll(async () => {
     process.env.RABBIT_ON = "false"
