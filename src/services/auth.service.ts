@@ -182,7 +182,6 @@ export class AuthService {
                 throw new httpError.NotFound(`user with id ${id} wasn't found`)
             }
             await this.userRepository.updateOneById(id, {$set:{services: {productService: true}}})
-            RabbitMQService.publishProductService(user.email)
         } catch (err: any) {
             Logger.error(err, {file: this.file})
             throw err

@@ -145,9 +145,6 @@ export class RabbitMQService {
     static publishNewCode(to: string, code: string) {
         this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: [to], subject: "new code", text:`take this new code ${code}`})
     }
-    static publishProductService(to: string) {
-        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: [to], subject: "product service", text:`you are already able to use the product service`})
-    }
     private static publishMessages(exchange: string, routingKey: string, body: any): boolean {
         if (process.env.RABBIT_ON && process.env.RABBIT_ON !== "true") {
             Logger.info({file: this.file}, `[fake] sending message to exchange ${exchange} routing key ${routingKey}`)
