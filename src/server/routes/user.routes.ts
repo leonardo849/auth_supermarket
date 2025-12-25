@@ -54,7 +54,6 @@ export class UserRoutes {
             this.userController.findAllUsers.bind(this.userController)
         )
 
-        
         router.get(
             "/:id",
             validateJwt,

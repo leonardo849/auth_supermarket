@@ -88,14 +88,20 @@ describe("test user's routes", () => {
         const response = await request(app).get(`${prefixUsers}/me`).set("Authorization", `Bearer ${tokenDev}`)
         expect(response.status).toBe(200)
         devDto = response.body
+        expect(response.body.name).toBe(dev?.name)
+        expect(response.body.email).toBe(dev?.email)
     })
     it("find me manager", async () => {
         const response = await request(app).get(`${prefixUsers}/me`).set("Authorization", `Bearer ${tokenManager}`)
         expect(response.status).toBe(200)
         managerDto = response.body
+        expect(response.body.name).toBe(manager?.name)
+        expect(response.body.email).toBe(manager?.email)
     })
     it("find user by id", async () => {
         const response = await request(app).get(`${prefixUsers}/${devDto.id}`).set("Authorization", `Bearer ${tokenManager}`)
         expect(response.status).toBe(200)
+        expect(response.body.name).toBe(dev?.name)
+        expect(response.body.email).toBe(dev?.email)
     })
 })
