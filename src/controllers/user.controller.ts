@@ -9,9 +9,9 @@ export class UserController {
     private readonly userService: UserService = new UserService()
 
     async findAllUsers(req: RequestWithUser, res: Response, next: NextFunction) {
-        const {page, limit} = req.params as any as {page: number, limit: number}
+        const {page, limit} = req.params as any as {page: string, limit: string}
         try {
-            const users =  await this.userService.findAllUsers(page, limit)
+            const users =  await this.userService.findAllUsers(Number(page), Number(limit))
             return res.status(200).json(users)
         } catch (err) {
             next(err)
@@ -28,9 +28,9 @@ export class UserController {
         }
     }
     async findAllActiveUsers(req: Request, res: Response, next: NextFunction) {
-        const {page, limit} = req.params as any as {page: number, limit: number}
+        const {page, limit} = req.params as any as {page: string, limit: string}
         try {
-            const users = await this.userService.findActiveUsers(page, limit)
+            const users = await this.userService.findActiveUsers(Number(page), Number(limit))
             return res.status(200).json(users)
         } catch (err) {
             next(err)

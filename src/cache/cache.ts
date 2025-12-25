@@ -8,8 +8,10 @@ export class RedisClient {
 
     private static getClientInstance() {
         if (!this.client) {
+            const database = process.env.REDIS_DATABASE ? Number(process.env.REDIS_DATABASE) : 5
             this.client = createClient({
-                url: process.env.REDIS_URI || "redis://localhost:6379"
+                url: process.env.REDIS_URI || "redis://localhost:6379",
+                database:  database
             })
 
             this.client.on("error", (err) => {

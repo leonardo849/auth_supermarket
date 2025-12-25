@@ -76,9 +76,10 @@ describe("test user's routes", () => {
         tokenManager = response.body.token
     })
     it("find all", async () => {
-        const response = await request(app).get(`${prefixUsers}`). 
+        const response = await request(app).get(`${prefixUsers}/1/5`). 
         set("Authorization", `Bearer ${tokenManager}`)
         expect(response.status).toBe(200)
         expect(response.body.length).toBeGreaterThanOrEqual(3)
+        expect(response.body.length).toBeLessThanOrEqual(5)
     })
 })

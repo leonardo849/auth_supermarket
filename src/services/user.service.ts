@@ -47,6 +47,9 @@ export class UserService {
         try {
             const user = await this.userRepository.findUserByEmail(data.email)
             if (user) {
+                if (user.role != Roles.CUSTOMER) {
+                    RabbitMQService.publishCreatedWorker({auth_updated_at: user.authUpdatedAt.toISOString(), id: user._id, role: user.role})
+                }
                 throw httpError.Conflict("user already exist")
             }
             await this.userRepository.seedUser(data)

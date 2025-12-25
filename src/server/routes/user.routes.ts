@@ -16,8 +16,8 @@ export class UserRoutes {
     }
     setupRoutes(): Router {
         const router = Router()
-        router.get("/", validateJwt, checkVerify(true),checkRole([Roles.MANAGER, Roles.DEVELOPER]),this.userController.findAllUsers.bind(this.userController))
-        router.get("/active", validateJwt,checkVerify(true), checkRole([Roles.MANAGER, Roles.DEVELOPER]), this.userController.findAllActiveUsers.bind(this.userController))
+        router.get("/:page/:limit", validateJwt, checkVerify(true),checkRole([Roles.MANAGER, Roles.DEVELOPER]),this.userController.findAllUsers.bind(this.userController))
+        router.get("/active/:page/:limit", validateJwt,checkVerify(true), checkRole([Roles.MANAGER, Roles.DEVELOPER]), this.userController.findAllActiveUsers.bind(this.userController))
         router.post("/", this.userController.createUser.bind(this.userController))
         router.delete("/me", validateJwt, this.userController.deleteOwnUser.bind(this.userController))
         Logger.info({file: this.file}, "user's routes are running")
