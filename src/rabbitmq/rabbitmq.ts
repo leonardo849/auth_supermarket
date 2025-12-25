@@ -139,6 +139,15 @@ export class RabbitMQService {
     static publishDeletedWorker(body: DeletedUserEvent) {
         this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userDeleted, body)   
     }
+    static publishCodeExpired(to: string[]) {
+        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: to, subject: "your code was expired", text:`your code was expired. Get a new code`})
+    }
+    static publishNewCode(to: string, code: string) {
+        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: [to], subject: "new code", text:`take this new code ${code}`})
+    }
+    static publishProductService(to: string) {
+        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: [to], subject: "product service", text:`you are already able to use the product service`})
+    }
     private static publishMessages(exchange: string, routingKey: string, body: any): boolean {
         if (process.env.RABBIT_ON && process.env.RABBIT_ON !== "true") {
             Logger.info({file: this.file}, `[fake] sending message to exchange ${exchange} routing key ${routingKey}`)

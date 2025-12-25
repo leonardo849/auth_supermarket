@@ -8,7 +8,7 @@ export function decoratorValidateFilter(policy: {allowedFields: string[], allowe
         descriptor.value = function(...args: any[]) {
             const filter = args[0]
             if (!validateMongoFilter(filter, policy.allowedFields, policy.allowedOperators)) {
-                throw new Error(`invalid mongo filter in ${target.constructor.name}.${property}`)
+                throw new Error(`invalid mongo filter in ${target.constructor.name}.${property} filter: ${JSON.stringify(filter)}`)
             }
 
             return originalMethod.apply(this, args)

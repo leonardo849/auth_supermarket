@@ -64,6 +64,9 @@ export class User {
     @prop({default: Date.now})
     authUpdatedAt!: Date
 
+    @prop({default: null})
+    codeGeneratedAt!: Date
+
     @prop({type: () => Services, default: {}})
     services!: Services
 

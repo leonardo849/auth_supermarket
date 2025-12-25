@@ -145,6 +145,7 @@ export class UserService {
     
     
     
+    
     private async setUserCache(id: string) {
         try {
             const user = await this.userRepository.findUserById(id)
@@ -168,4 +169,5 @@ export class UserService {
             Logger.error(err, {file: this.file})
         }
     }
+
 }

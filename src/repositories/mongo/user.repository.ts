@@ -49,7 +49,8 @@ export class UserRepository  {
                 {
                     ...data,
                     dateOfBirth: new Date(data.dateOfBirth),
-                    code: data.hashCode
+                    code: data.hashCode,
+                    codeGeneratedAt: Date.now()
                 }
             )
             await user.save()
@@ -109,5 +110,11 @@ export class UserRepository  {
     }
     async findUserById(id: string): Promise<User|null> {
        return await this.userModel.findById(id)
+    }
+    @decoratorValidateFilter({allowedFields: ALLOWED_USER_FILTER_FIELDS, allowedOperators: ALLOWED_MONGO_OPERATORS})
+    @decoratorValidateUpdateQuery({allowedFields: ALLOWED_USER_UPDATE_FIELDS, allowedOperators: ALLOWED_UPDATE_OPERATORS})
+    async updateOne(filter: FilterQuery<User>, data: UpdateQuery<User>): Promise<boolean> {
+        const quantity = (await this.userModel.updateOne(filter, data)).matchedCount
+        return quantity > 0
     }
 }

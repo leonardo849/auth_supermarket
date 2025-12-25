@@ -6,7 +6,8 @@ export const ALLOWED_USER_FILTER_FIELDS = [
     "role",
     "createdAt",
     "updatedAt",
-    "emailWithNotificationToVerificationHasBeenSent"
+    "emailWithNotificationToVerificationHasBeenSent",
+    "codeGeneratedAt"
 ] 
 
 
@@ -19,7 +20,8 @@ export const ALLOWED_USER_UPDATE_FIELDS = [
     "authUpdatedAt",
     "code",
     "services",
-    "productService"
+    "productService",
+    "codeGeneratedAt"
 ] 
 
 

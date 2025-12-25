@@ -12,6 +12,7 @@ import { Roles } from "../types/enums/roles.ts";
 import { UserCacheRepository } from "../repositories/redis/user.cache.repository.ts";
 import { Logger } from "../utils/logger/logger.ts";
 import { basename } from "path";
+import { RabbitMQService } from "../rabbitmq/rabbitmq.ts";
 
 
 
@@ -65,11 +66,12 @@ export class AuthService {
                     await this.userRepository.updateOneById(user._id, {
                         $set: {
                             authUpdatedAt: Date.now(),
-                            verified: true
+                            verified: true,
                         },
                         $unset: {
                             code: "",
-                            emailWithNotificationToVerificationHasBeenSent: ""
+                            emailWithNotificationToVerificationHasBeenSent: "",
+                            codeGeneratedAt: "",
                         }
                     })
                     setImmediate(() => {
@@ -84,6 +86,22 @@ export class AuthService {
             throw errorHandler(err)
         }
     }
+
+    async expireCodes() {
+        try {
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+            await this.userRepository.updateMany({codeGeneratedAt: {$lte: fiveMinutesAgo}}, {$unset: {code: "", codeGeneratedAt: ""}})
+            const emails = await this.userRepository.findUnverifiedUsersEmailIn(fiveMinutesAgo)
+            if (emails.length > 0) {
+                RabbitMQService.publishCodeExpired(emails)
+                Logger.info({file: this.file}, "emails expired code were sent")
+            }
+            Logger.info({file: this.file},"expire codes was used")
+        } catch(err: any) {
+            throw errorHandler(err)
+        }
+    }
+
     async changeUserRoleById(id: string, role: Roles): Promise<void> {
         try {
             const user = await this.userRepository.findUserById(id)
@@ -105,8 +123,14 @@ export class AuthService {
     async getNewUserCode(id: string): Promise<void> {
         try {
             const code = await generateRandomCode()
+
             const codeHash = await bcrypt.hash(code, 10)
-            await this.userRepository.updateOneById(id, {$set:{code: codeHash}})
+            await this.userRepository.updateOneById(id, {$set:{code: codeHash,codeGeneratedAt: Date.now()}})
+            const user = await this.userRepository.findUserById(id)
+            if (!user) {
+                throw httpError.NotFound(`user with id ${id} wasn't found`)
+            }
+            RabbitMQService.publishNewCode(user.email, code)
         } catch (err) {
             throw errorHandler(err)
         }
@@ -158,6 +182,7 @@ export class AuthService {
                 throw new httpError.NotFound(`user with id ${id} wasn't found`)
             }
             await this.userRepository.updateOneById(id, {$set:{services: {productService: true}}})
+            RabbitMQService.publishProductService(user.email)
         } catch (err: any) {
             Logger.error(err, {file: this.file})
             throw err

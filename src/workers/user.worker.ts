@@ -15,13 +15,14 @@ export class UserWorker {
             await this.deleteUnverifiedUsers()
         }, 1000 * 60 * 10);
         setInterval(async () => {
+            await this.expireCodes()
             await this.sendEmailToUnverifiedUsers()
-            
         }, 1000 * 60 * 5)
     }
     async runJobs() {
         await this.authService.deleteUnverifiedUsers()
         await this.sendEmailToUnverifiedUsers()
+        await this.expireCodes()
     }
     private async deleteUnverifiedUsers() {
         await this.authService.deleteUnverifiedUsers()
@@ -34,7 +35,10 @@ export class UserWorker {
             Logger.info({file: this.file}, "email to unverified users was published")
             await this.authService.updateEmailWithNotificationToVerificationHasBeenSent(emails)
         }
-        Logger.info({file: this.file}, "sendEmailToUnverifiedUsers was used")
-        
+        Logger.info({file: this.file}, "sendEmailToUnverifiedUsers was used") 
+    }
+    private async expireCodes() {
+        await this.authService.expireCodes()
+        Logger.info({file: this.file},"expireCodes worker was used")
     }
 }
