@@ -1,6 +1,6 @@
 import request from "supertest"
 import { app, genericalPassword } from "../setup.ts"
-import { CreateUserDTO } from "../../src/dto/user.dto.ts"
+import { CreateUserDTO, FindUserDTO } from "../../src/dto/user.dto.ts"
 import usersJson from "../../src/database/seeds/users.json" with {type: "json"}
 import { Roles } from "../../src/types/enums/roles.ts"
 
@@ -11,6 +11,8 @@ describe("test user's routes", () => {
     let tokenManager: string
     const dev = usersJson.find(element => element.role === Roles.DEVELOPER)
     const manager = usersJson.find(element => element.role === Roles.MANAGER)
+    let devDto: FindUserDTO
+    let managerDto: FindUserDTO
     it("should return http 200 create user ", async () => {
         const body:CreateUserDTO = {
             address: {
@@ -81,5 +83,19 @@ describe("test user's routes", () => {
         expect(response.status).toBe(200)
         expect(response.body.length).toBeGreaterThanOrEqual(3)
         expect(response.body.length).toBeLessThanOrEqual(5)
+    })
+    it("find me dev", async () => {
+        const response = await request(app).get(`${prefixUsers}/me`).set("Authorization", `Bearer ${tokenDev}`)
+        expect(response.status).toBe(200)
+        devDto = response.body
+    })
+    it("find me manager", async () => {
+        const response = await request(app).get(`${prefixUsers}/me`).set("Authorization", `Bearer ${tokenManager}`)
+        expect(response.status).toBe(200)
+        managerDto = response.body
+    })
+    it("find user by id", async () => {
+        const response = await request(app).get(`${prefixUsers}/${devDto.id}`).set("Authorization", `Bearer ${tokenManager}`)
+        expect(response.status).toBe(200)
     })
 })

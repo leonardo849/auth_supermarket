@@ -45,4 +45,22 @@ export class UserController {
             next(err)
         }
     }
+    async findUserById(req: RequestWithUser, res: Response, next: NextFunction) {
+        const {id} = req.params as {id: string}
+        try {
+            const user = await this.userService.findUserById(id)
+            return res.status(200).json(user)
+        } catch (err) {
+            next(err)
+        }
+    }
+    async findOwnUser(req: RequestWithUser, res: Response, next: NextFunction) {
+        const {id} = req.user as IUser
+        try {
+            const user = await this.userService.findUserById(id)
+            return res.status(200).json(user)
+        } catch(err) {
+            next(err)
+        }
+    }
 }
