@@ -19,6 +19,7 @@ async function deleteAllInMongodb() {
 
 beforeAll(async () => {
     process.env.RABBIT_ON = "false"
+    process.env.SERVICES = "false"
     index = new Index()
     index.initEnvironment()
     await index.connectToDatabases()

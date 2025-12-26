@@ -13,12 +13,14 @@ import { UserCacheRepository } from "../repositories/redis/user.cache.repository
 import { Logger } from "../utils/logger/logger.ts";
 import { basename } from "path";
 import { RabbitMQService } from "../rabbitmq/rabbitmq.ts";
+import { ProductClient } from "../integrations/product/product.client.ts";
 
 
 
 export class AuthService {
     private readonly userCacheRepository: UserCacheRepository = new UserCacheRepository()
     private readonly file: string = basename(import.meta.url)
+    private readonly productClient: ProductClient = new ProductClient()
     private readonly userRepository: UserRepository = new UserRepository()
     constructor() {
 
@@ -102,7 +104,7 @@ export class AuthService {
         }
     }
 
-    async changeUserRoleById(id: string, role: Roles): Promise<void> {
+    async changeUserRoleById(id: string, role: Roles, token: string): Promise<void> {
         try {
             const user = await this.userRepository.findUserById(id)
             if (!user) {
@@ -111,7 +113,17 @@ export class AuthService {
             if (!user.verified) {
                 throw httpError.BadRequest("that user isn't verified")
             }
-            await this.userRepository.updateOneById(id, {$set:{role: role, authUpdatedAt: Date.now()}})
+            const res = await this.productClient.CheckIfUserIsInErrors(token, id)
+            if (!res.allowed) {
+                throw httpError.UnprocessableEntity(`user with id ${id} is in error in product service. try to update it later`)
+            }
+            const sucess = await this.userRepository.updateOneById(id, {$set:{role: role, authUpdatedAt: Date.now()}})
+            if (sucess && role === Roles.CUSTOMER) {
+                RabbitMQService.publishDeletedWorker({id: id})   
+            }
+            if (!sucess) {
+                throw httpError.InternalServerError("it wasn't possible to update that user")
+            }
             setImmediate(() => {
                 this.setUserInCache(id)
             })
