@@ -1,6 +1,6 @@
 import { basename } from "path"
 import { Logger } from "../../utils/logger/logger.ts"
-import axios, { AxiosInstance } from "axios"
+import axios, { AxiosInstance } from "axios";
 
 type checkIfUserIsInErrors = {allowed: boolean, error: string|null}
 
@@ -8,7 +8,7 @@ export class ProductClient {
     private readonly client: AxiosInstance
     private readonly file: string = basename(import.meta.url)
     constructor() {
-        if (process.env.PRODUCT_SERVICE === "" || !process.env.PRODUCT_SERVICE) {
+        if ((process.env.PRODUCT_SERVICE === "" || !process.env.PRODUCT_SERVICE) && this.checkIfServicesAreOn()) {
             Logger.error(new Error("product service url doesn't exist"), {file: this.file})
             process.exit(1)
         }
@@ -22,8 +22,8 @@ export class ProductClient {
     
     async CheckIfUserIsInErrors(token: string, targetId: string): Promise<checkIfUserIsInErrors> {
         if (!this.checkIfServicesAreOn()) {
-            return {allowed: true, error: null}
-        }
+             return {allowed: true, error: null}
+         }
         try {
             const res = await this.client.get<checkIfUserIsInErrors>(`/user/${targetId}/permissions/errors`, {
             headers: {
@@ -40,10 +40,10 @@ export class ProductClient {
             throw err
         }
     }
-    private checkIfServicesAreOn(): boolean {
-        if (!process.env.SERVICES) {
-            return false
-        }
-        return process.env.SERVICES.toLowerCase() === "true"
-    }
+     private checkIfServicesAreOn(): boolean {
+         if (!process.env.SERVICES) {
+             return false
+         }
+         return process.env.SERVICES.toLowerCase() === "true"
+     }
 } 
