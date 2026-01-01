@@ -5,4 +5,5 @@ dist
 settings.json
 .vscode
 /src/database/seeds/users.json
+pacts
 

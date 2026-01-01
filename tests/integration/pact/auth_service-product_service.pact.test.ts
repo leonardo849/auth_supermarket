@@ -21,7 +21,7 @@ describe("Pact V4 | AuthService -> product_service", () => {
 			.uponReceiving("a request to check if user is in error in product_service")
 			.withRequest("GET", "/user/user-123/permissions/errors", (builder) => {
 				builder.headers({
-					Authorization: like("Bearer valid.jwt.token"),
+					Authorization: "Bearer valid.jwt.token",
 				})
 			})
 			.willRespondWith(200, (builder) => {

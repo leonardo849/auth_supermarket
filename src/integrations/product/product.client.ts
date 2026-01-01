@@ -1,6 +1,6 @@
 import { basename } from "path"
 import { Logger } from "../../utils/logger/logger.ts"
-import axios, { AxiosInstance } from "axios"
+import axios, { AxiosInstance } from "axios";
 
 type checkIfUserIsInErrors = {allowed: boolean, error: string|null}
 

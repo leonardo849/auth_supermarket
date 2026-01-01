@@ -17,18 +17,6 @@
             "Bearer valid.jwt.token"
           ]
         },
-        "matchingRules": {
-          "header": {
-            "Authorization": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            }
-          }
-        },
         "method": "GET",
         "path": "/user/user-123/permissions/errors"
       },
