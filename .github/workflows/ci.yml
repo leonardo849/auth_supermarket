@@ -81,8 +81,6 @@ jobs:
             MONGO_URI: mongodb://APP-USERNAME:APP-PASSWORD@localhost:27017/APP-DB?authSource=APP-DB
             REDIS_URI: redis://localhost:6379
             RABBIT_ON: false
-            PRODUCT_SERVICE: ""
-            SERVICES: false
             REDIS_DATABASE: "5"
       - name: publish pact to broker
         if: github.event_name == 'push'

@@ -1,51 +1,43 @@
-import { basename } from "path"
-import { Logger } from "../../utils/logger/logger.ts"
-import axios from "axios";
-import type { AxiosInstance } from "axios";
+import { basename } from "path";
+import { Logger } from "../../utils/logger/logger.ts";
+import httpError from "http-errors"
+import {checkIfServicesAreOn} from "../../utils/config/are_services_on.ts"
 
-
-type checkIfUserIsInErrors = {allowed: boolean, error: string|null}
+type getUserInErrorsType = {allowed: boolean, error: string|null}
 
 export class ProductClient {
-    private readonly client: AxiosInstance
-    private readonly file: string = basename(import.meta.url)
-    constructor() {
-        if ((process.env.PRODUCT_SERVICE === "" || !process.env.PRODUCT_SERVICE) && this.checkIfServicesAreOn()) {
-            Logger.error(new Error("product service url doesn't exist"), {file: this.file})
-            process.exit(1)
+	private baseUrl: string
+	private file = basename(import.meta.url)
+
+	constructor() {
+		this.baseUrl = process.env.PRODUCT_SERVICE as string
+	}
+
+	async getUserInErrors(id: string, token: string): Promise<getUserInErrorsType>  {
+        if (!checkIfServicesAreOn()) {
+            return {allowed: true, error: null}
         }
-        const url = process.env.PRODUCT_SERVICE
-        this.client = axios.create({
-            baseURL: url,
-            timeout: 5000
-        })
-        
-    }
-    
-    async CheckIfUserIsInErrors(token: string, targetId: string): Promise<checkIfUserIsInErrors> {
-        if (!this.checkIfServicesAreOn()) {
-             return {allowed: true, error: null}
-         }
-        try {
-            const res = await this.client.get<checkIfUserIsInErrors>(`/user/${targetId}/permissions/errors`, {
+		const res = await fetch(`${this.baseUrl}/user/${id}/permissions/errors`, {
             headers: {
-                "Authorization": `Bearer ${token}`
-                }
-            })
-            return res.data
-        } catch (err: unknown) {
-            if (axios.isAxiosError(err)) {
-                Logger.error(err.message, {file: this.file})
-                throw err
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
             }
-            Logger.error(new Error("error in request"), {file: this.file})
-            throw err
-        }
-    }
-     private checkIfServicesAreOn(): boolean {
-         if (!process.env.SERVICES) {
-             return false
-         }
-         return process.env.SERVICES.toLowerCase() === "true"
-     }
-} 
+        })
+
+		if (!res.ok) {
+			const text = await res.text()
+            let error: any
+            if (res.status === 404) {
+                error = httpError.NotFound(`status code ${res.status}: ${text}`)
+            } else  {
+                error = httpError.InternalServerError(`status code ${res.status}: ${text}`)
+            }
+            
+            Logger.error(error, {file: this.file})
+			throw error
+		}
+
+		const json = (await  res.json()) as getUserInErrorsType
+        return json
+	}
+}

@@ -113,8 +113,8 @@ export class AuthService {
             if (!user.verified) {
                 throw httpError.BadRequest("that user isn't verified")
             }
-            const res = await this.productClient.CheckIfUserIsInErrors(token, id)
-            if (!res.allowed) {
+            const res = await this.productClient.getUserInErrors(user._id, token)
+            if (!res.allowed ) {
                 throw httpError.UnprocessableEntity(`user with id ${id} is in error in product service. try to update it later`)
             }
             const sucess = await this.userRepository.updateOneById(id, {$set:{role: role, authUpdatedAt: Date.now()}})
