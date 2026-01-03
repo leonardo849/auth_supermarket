@@ -24,7 +24,7 @@ export class RabbitMQService {
         userCreatedProductError: "user.product.created_error",
         userVerified: "user.auth.verified",
         userCreatedWorker: "user.auth.created_worker",
-        userDeleted: "user.auth.deleted"
+        userDeleted: "user.auth.worker_deleted"
     }
 
     static async startRabbit(uri: string) {
@@ -134,6 +134,7 @@ export class RabbitMQService {
         this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: to, subject: "your account was deleted", text: "your user was deleted. Our servers couldn't create your user in all of ours systems. Try to create account later"})
     }
     static publishCreatedWorker(body: CreateWorkerEvent) {
+
         this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userCreatedWorker, body)
     }
     static publishDeletedWorker(body: DeletedUserEvent) {

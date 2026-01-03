@@ -42,8 +42,9 @@ export class AuthController {
     async changeUserRole(req: RequestWithUser, res: Response, next: NextFunction) {
         const id = req.params.id as string
         const body = req.body as ChangeUserRoleDTO
+        const token = req.headers.authorization?.split(" ")[1]
         try {
-            await this.authService.changeUserRoleById(id, body.role)
+            await this.authService.changeUserRoleById(id, body.role, token as string)
             return res.status(200).json({message: "user's role was updated"})
         } catch (err) {
             next(err)
