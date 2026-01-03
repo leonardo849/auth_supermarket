@@ -1,6 +1,8 @@
 import { basename } from "path"
 import { Logger } from "../../utils/logger/logger.ts"
-import axios, { AxiosInstance } from "axios";
+import axios from "axios";
+import type { AxiosInstance } from "axios";
+
 
 type checkIfUserIsInErrors = {allowed: boolean, error: string|null}
 
@@ -32,7 +34,7 @@ export class ProductClient {
             })
             return res.data
         } catch (err: unknown) {
-            if (err instanceof axios.AxiosError) {
+            if (axios.isAxiosError(err)) {
                 Logger.error(err.message, {file: this.file})
                 throw err
             }
