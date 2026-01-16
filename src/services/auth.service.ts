@@ -14,6 +14,7 @@ import { Logger } from "../utils/logger/logger.ts";
 import { basename } from "path";
 import { RabbitMQService } from "../rabbitmq/rabbitmq.ts";
 import { ProductClient } from "../integrations/product/product.client.ts";
+import { Publisher } from "../rabbitmq/publisher.ts";
 
 
 
@@ -22,8 +23,9 @@ export class AuthService {
     private readonly file: string = basename(import.meta.url)
     private readonly productClient: ProductClient = new ProductClient()
     private readonly userRepository: UserRepository = new UserRepository()
+    private readonly publisher: Publisher
     constructor() {
-
+        this.publisher = new Publisher(RabbitMQService.getChannel())
     }
 
     async loginUser(data: LoginUserDTO): Promise<string| void> {
@@ -95,7 +97,7 @@ export class AuthService {
             await this.userRepository.updateMany({codeGeneratedAt: {$lte: fiveMinutesAgo}}, {$unset: {code: "", codeGeneratedAt: ""}})
             const emails = await this.userRepository.findUnverifiedUsersEmailIn(fiveMinutesAgo)
             if (emails.length > 0) {
-                RabbitMQService.publishCodeExpired(emails)
+                this.publisher.publishCodeExpired(emails)
                 Logger.info({file: this.file}, "emails expired code were sent")
             }
             Logger.info({file: this.file},"expire codes was used")
@@ -119,7 +121,7 @@ export class AuthService {
             }
             const sucess = await this.userRepository.updateOneById(id, {$set:{role: role, authUpdatedAt: Date.now()}})
             if (sucess && role === Roles.CUSTOMER) {
-                RabbitMQService.publishDeletedWorker({id: id})   
+                this 
             }
             if (!sucess) {
                 throw httpError.InternalServerError("it wasn't possible to update that user")
@@ -142,7 +144,7 @@ export class AuthService {
             if (!user) {
                 throw httpError.NotFound(`user with id ${id} wasn't found`)
             }
-            RabbitMQService.publishNewCode(user.email, code)
+            this.publisher.publishNewCode(user.email, code)
         } catch (err) {
             throw errorHandler(err)
         }

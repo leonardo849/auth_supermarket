@@ -2,12 +2,14 @@ import { Logger } from "../utils/logger/logger.ts";
 import { RabbitMQService } from "../rabbitmq/rabbitmq.ts";
 import { basename } from "path";
 import { AuthService } from "../services/auth.service.ts";
+import { Publisher } from "../rabbitmq/publisher.ts";
 
 export class UserWorker {
     private readonly file: string = basename(import.meta.url)
     private readonly authService: AuthService = new AuthService()
+    private readonly publisher: Publisher
     constructor() {
-
+        this.publisher = new Publisher(RabbitMQService.getChannel())
     }
     async scheduleJobs() {
         await this.runJobs()
@@ -31,7 +33,7 @@ export class UserWorker {
     private async sendEmailToUnverifiedUsers() {
         const emails = await this.authService.findUneverifiedUsersEmail()
         if (emails.length >= 1) {
-            RabbitMQService.publisWarningEmail(emails)
+            this.publisher.publishWarningEmail(emails)
             Logger.info({file: this.file}, "email to unverified users was published")
             await this.authService.updateEmailWithNotificationToVerificationHasBeenSent(emails)
         }

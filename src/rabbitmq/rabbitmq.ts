@@ -4,6 +4,7 @@ import amqp, { Connection, Channel, Options } from "amqplib";
 import { CreateWorkerEvent, DeletedUserEvent } from "../dto/events.dto.ts";
 import { UserConsumer } from "./user_consumer.ts";
 import httpError from "http-errors"
+import { Publisher } from "./publisher.ts";
 
 export class RabbitMQService {
     private static connection: amqp.ChannelModel
@@ -26,6 +27,11 @@ export class RabbitMQService {
         userCreatedWorker: "user.auth.created_worker",
         userDeleted: "user.auth.worker_deleted"
     }
+    private static publisher: Publisher
+
+    static  getChannel(): amqp.Channel {
+        return this.channel
+    }
 
     static async startRabbit(uri: string) {
         if (process.env.RABBIT_ON && process.env.RABBIT_ON !== "true") {
@@ -38,6 +44,7 @@ export class RabbitMQService {
             await this.createQueue()
             await this.bindQueue()
             this.consumer()
+            this.publisher = new Publisher(this.channel)
         } catch (err: unknown) {
             Logger.error(err, {file: this.file})
             throw err
@@ -97,7 +104,7 @@ export class RabbitMQService {
                 Logger.info({file: this.file}, `user with id ${json.id} was updated. Its productService value is true`)
             } catch (err: any) {
                 if (err instanceof httpError.HttpError && err.status === 404) {
-                    this.publishDeletedWorker({id: json.id})
+                    this.publisher.publishDeletedWorker({id: json.id})
                 }
                 Logger.error(err, {file: this.file})
                 throw err
@@ -106,7 +113,7 @@ export class RabbitMQService {
             Logger.info({file: this.file}, `user with id ${json.id} wasn't created in product service. Auth service will delete it if user's product service value is false`)
             const email = await userConsumer.deleteUser(json.id)
             if (email) {
-                this.publishAccountDeleted([email])
+                this.publisher.publishAccountDeleted([email])
             }
             Logger.info({file: this.file}, `it wasn't possible to delete user with id ${json.id}`)
             
@@ -123,40 +130,5 @@ export class RabbitMQService {
         }
 
         Logger.info({file: this.file}, "disconnected from Rabbit")
-    }
-    static  publishCreatedUserEmail(to: string[], code: string) {
-        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: to, subject: "code", text: `verify with that code:\n ${code}`})
-    }
-    static publisWarningEmail(to: string[]) {
-        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: to, subject: "warning", text: `hurry and verify your user. If you don't verify your user, it will be deleted soon`})
-    }
-    static publishAccountDeleted(to: string[]) {
-        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: to, subject: "your account was deleted", text: "your user was deleted. Our servers couldn't create your user in all of ours systems. Try to create account later"})
-    }
-    static publishCreatedWorker(body: CreateWorkerEvent) {
-
-        this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userCreatedWorker, body)
-    }
-    static publishDeletedWorker(body: DeletedUserEvent) {
-        this.publishMessages(this.exchanges.exchangeAuth, this.routingKeys.userDeleted, body)   
-    }
-    static publishCodeExpired(to: string[]) {
-        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: to, subject: "your code was expired", text:`your code was expired. Get a new code`})
-    }
-    static publishNewCode(to: string, code: string) {
-        this.publishMessages(this.exchanges.exchangeEmail, this.routingKeys.email, {to: [to], subject: "new code", text:`take this new code ${code}`})
-    }
-    private static publishMessages(exchange: string, routingKey: string, body: any): boolean {
-        if (process.env.RABBIT_ON && process.env.RABBIT_ON !== "true") {
-            Logger.info({file: this.file}, `[fake] sending message to exchange ${exchange} routing key ${routingKey}`)
-            return true
-        }
-        const published = this.channel.publish(exchange, routingKey, Buffer.from(JSON.stringify(body)), {persistent: true})
-        if (!published) {
-            Logger.error(new Error(`message with exchange ${exchange} and routing key ${routingKey} wasn't published`), {file: this.file})
-            return published
-        }
-        Logger.info({file: this.file}, `message with exchange ${exchange} and routing key ${routingKey} was published`)
-        return published
     }
 }

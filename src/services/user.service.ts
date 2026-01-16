@@ -10,12 +10,17 @@ import { Roles } from "../types/enums/roles.ts";
 import { Logger } from "../utils/logger/logger.ts";
 import { basename } from "path";
 import { Services, User } from "../models/user.model.ts";
+import { Publisher } from "../rabbitmq/publisher.ts";
 
 
 export class UserService {
     private readonly userRepository: UserRepository = new UserRepository()
     private readonly userCacheRepository: UserCacheRepository = new UserCacheRepository()
     private readonly file: string = basename(import.meta.url)
+    private readonly publisher: Publisher
+    constructor() {
+        this.publisher = new Publisher(RabbitMQService.getChannel())
+    }
     async findAllUsers(pag: number, limit: number): Promise<FindUserDTO[]> {
         try {
             const users = await this.userRepository.findAllPaginated(pag, limit)
@@ -37,8 +42,8 @@ export class UserService {
             const code = generateRandomCode()
             const hashCode = await bcrypt.hash(code, 10)
             await this.userRepository.createUser({...data, hashCode: hashCode})
-            RabbitMQService.publishCreatedUserEmail([data.email], code)
-            
+            // RabbitMQService.publishCreatedUserEmail([data.email], code)
+            this.publisher.publishCreatedUserEmail([data.email], code)
         } catch (err: any) {
             throw errorHandler(err)
         }
@@ -48,7 +53,7 @@ export class UserService {
             const user = await this.userRepository.findUserByEmail(data.email)
             if (user) {
                 if (user.role != Roles.CUSTOMER) {
-                    RabbitMQService.publishCreatedWorker({auth_updated_at: user.authUpdatedAt.toISOString(), id: user._id, role: user.role})
+                    this.publisher.publishCreatedWorker({auth_updated_at: user.authUpdatedAt.toISOString(), id: user._id, role: user.role})
                 }
                 throw httpError.Conflict("user already exist")
             }
@@ -58,7 +63,7 @@ export class UserService {
                 throw httpError.InternalServerError(`user wasn't created`)
             }
             if (data.role != Roles.CUSTOMER) {
-                RabbitMQService.publishCreatedWorker({auth_updated_at: newUser.authUpdatedAt.toISOString(), id: newUser._id, role: newUser.role})
+                this.publisher.publishCreatedWorker({auth_updated_at: newUser.authUpdatedAt.toISOString(), id: newUser._id, role: newUser.role})
             }
         } catch (err: any) {
             throw errorHandler(err)
@@ -136,7 +141,7 @@ export class UserService {
             const user = await this.findUserById(id)
             await this.userRepository.deleteUserById(id)
             await this.userCacheRepository.deleteUsers([id])
-            RabbitMQService.publishDeletedWorker({id: id})
+            this.publisher.publishDeletedWorker({id: id})
             return user.email
         } catch (err: any) {
             throw errorHandler(err)
